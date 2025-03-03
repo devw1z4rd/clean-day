@@ -1,8 +1,28 @@
 <template>
-  <div class="chart-container card">
-    <h2 class="chart-title">{{ title }}</h2>
-    <canvas ref="chartCanvas"></canvas>
-  </div>
+  <UCard class="mb-8" :ui="{ 
+    ring: '', 
+    divide: 'divide-y divide-gray-100 dark:divide-gray-800',
+    body: { base: 'p-6' },
+    header: { padding: 'px-6 py-5' }
+  }" 
+    :class="{
+      'border-t-4 border-t-primary-500': type === 'money',
+      'border-t-4 border-t-blue-500': type === 'cigarettes',
+      'border-t-4 border-t-orange-500': type === 'health'
+    }">
+    <template #header>
+      <h2 class="text-xl font-semibold text-center" 
+        :class="{
+          'text-primary-600': type === 'money',
+          'text-blue-600': type === 'cigarettes',
+          'text-orange-600': type === 'health'
+        }">
+        {{ title }}
+      </h2>
+    </template>
+
+    <canvas ref="chartCanvas" class="w-full max-h-96"></canvas>
+  </UCard>
 </template>
 
 <script setup>
@@ -29,8 +49,27 @@ const userStore = useUserStore();
 const chartCanvas = ref(null);
 let chart = null;
 
+const getChartColors = () => {
+  const colors = {
+    money: {
+      backgroundColor: 'rgba(76, 175, 80, 0.15)',
+      borderColor: 'rgba(76, 175, 80, 1)',
+    },
+    cigarettes: {
+      backgroundColor: 'rgba(33, 150, 243, 0.15)',
+      borderColor: 'rgba(33, 150, 243, 1)',
+    },
+    health: {
+      backgroundColor: 'rgba(255, 152, 0, 0.15)',
+      borderColor: 'rgba(255, 152, 0, 1)',
+    },
+  };
+
+  return colors[props.type];
+};
+
 const updateChart = async () => {
-  if (!process.client || !userStore.hasQuit || !chartCanvas.value) return;
+  if (typeof window === 'undefined' || !userStore.hasQuit || !chartCanvas.value) return;
 
   try {
     const { default: Chart } = await import('chart.js/auto');
@@ -74,25 +113,20 @@ const updateChart = async () => {
     const chartSettings = {
       money: {
         label: 'Сэкономлено денег (EUR)',
-        backgroundColor: 'rgba(91, 140, 90, 0.15)',
-        borderColor: 'rgba(91, 140, 90, 1)',
         yAxisLabel: 'EUR'
       },
       cigarettes: {
         label: 'Непокуренные сигареты',
-        backgroundColor: 'rgba(74, 111, 165, 0.15)',
-        borderColor: 'rgba(74, 111, 165, 1)',
         yAxisLabel: 'Количество сигарет'
       },
       health: {
         label: 'Улучшение здоровья (%)',
-        backgroundColor: 'rgba(249, 136, 102, 0.15)',
-        borderColor: 'rgba(249, 136, 102, 1)',
         yAxisLabel: 'Процент (%)'
       }
     };
     
     const settings = chartSettings[props.type];
+    const colors = getChartColors();
     
     if (chart) {
       chart.destroy();
@@ -105,12 +139,12 @@ const updateChart = async () => {
         datasets: [{
           label: settings.label,
           data: data,
-          backgroundColor: settings.backgroundColor,
-          borderColor: settings.borderColor,
+          backgroundColor: colors.backgroundColor,
+          borderColor: colors.borderColor,
           borderWidth: 2,
           tension: 0.4,
           fill: true,
-          pointBackgroundColor: settings.borderColor,
+          pointBackgroundColor: colors.borderColor,
           pointRadius: 4,
           pointHoverRadius: 6
         }]
@@ -124,7 +158,7 @@ const updateChart = async () => {
             position: 'top',
             labels: {
               font: {
-                family: 'Inter, Roboto, sans-serif',
+                family: 'Inter, Roboto, system-ui, sans-serif',
                 size: 12
               },
               padding: 20
@@ -136,7 +170,7 @@ const updateChart = async () => {
             backgroundColor: 'rgba(255, 255, 255, 0.95)',
             titleColor: '#333',
             bodyColor: '#666',
-            borderColor: settings.borderColor,
+            borderColor: colors.borderColor,
             borderWidth: 1,
             padding: 12,
             boxPadding: 6,
@@ -145,11 +179,6 @@ const updateChart = async () => {
             },
             bodyFont: {
               size: 13
-            },
-            callbacks: {
-              title: function(tooltipItems) {
-                return tooltipItems[0].label;
-              }
             }
           }
         },
@@ -162,7 +191,7 @@ const updateChart = async () => {
             },
             ticks: {
               font: {
-                family: 'Inter, Roboto, sans-serif',
+                family: 'Inter, Roboto, system-ui, sans-serif',
                 size: 11
               },
               padding: 10
@@ -186,7 +215,7 @@ const updateChart = async () => {
             },
             ticks: {
               font: {
-                family: 'Inter, Roboto, sans-serif',
+                family: 'Inter, Roboto, system-ui, sans-serif',
                 size: 11
               },
               padding: 10
@@ -221,7 +250,7 @@ const updateChart = async () => {
 };
 
 onMounted(() => {
-  if (process.client) {
+  if (typeof window !== 'undefined') {
     updateChart();
     
     const interval = setInterval(() => {
@@ -250,61 +279,3 @@ watch(() => [props.type, props.days], () => {
   updateChart();
 }, { deep: true });
 </script>
-
-<style scoped>
-.chart-container {
-  padding: 1.75rem;
-  margin-bottom: 2.5rem;
-  border-radius: var(--border-radius);
-  background-color: var(--card-bg);
-  border-top: 4px solid var(--primary-color);
-}
-
-.chart-container:nth-of-type(2) {
-  border-top-color: var(--secondary-color);
-}
-
-.chart-container:nth-of-type(3) {
-  border-top-color: var(--accent-color);
-}
-
-.chart-title {
-  text-align: center;
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-  color: var(--primary-color);
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.chart-container:nth-of-type(2) .chart-title {
-  color: var(--secondary-color);
-}
-
-.chart-container:nth-of-type(3) .chart-title {
-  color: var(--accent-color);
-}
-
-canvas {
-  width: 100% !important;
-  height: auto !important;
-  max-height: 400px;
-  margin: 0 auto;
-}
-
-@media (max-width: 768px) {
-  .chart-container {
-    padding: 1.25rem;
-  }
-  
-  .chart-title {
-    font-size: 1.25rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .chart-title {
-    margin-bottom: 1rem;
-  }
-}
-</style>

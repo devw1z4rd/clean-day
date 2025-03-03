@@ -1,86 +1,55 @@
 <template>
-  <div class="app-container">
-    <NuxtLayout>
-      <NuxtPage />
-    </NuxtLayout>
+  <div class="min-h-screen bg-gray-100 dark:bg-gray-950">
+    <nav class="bg-primary-600 text-white py-3 px-4 sticky top-0 z-50 shadow-lg" >
+      <div class="container mx-auto flex justify-between items-center">
+        <NuxtLink to="/" class="flex items-center">
+          <span class="text-xl mr-1">✨</span>
+          <span class="font-bold text-lg">Clean Day</span>
+        </NuxtLink>
+        
+        <div class="hidden md:flex space-x-4">
+          <NuxtLink to="/" class="px-3 py-2 rounded hover:bg-primary-700">Главная</NuxtLink>
+          <NuxtLink to="/statistics" class="px-3 py-2 rounded hover:bg-primary-700">Статистика</NuxtLink>
+          <NuxtLink to="/achievements" class="px-3 py-2 rounded hover:bg-primary-700">Достижения</NuxtLink>
+          <NuxtLink to="/settings" class="px-3 py-2 rounded hover:bg-primary-700">Настройки</NuxtLink>
+        </div>
+        
+        <button 
+          class="md:hidden px-2 py-1 rounded bg-primary-700"
+          @click="mobileMenuOpen = !mobileMenuOpen"
+        >
+          Меню
+        </button>
+      </div>
+    </nav>
+    
+    <div v-if="mobileMenuOpen" class="md:hidden bg-gray-900 text-white">
+      <div class="container mx-auto py-2">
+        <div class="flex flex-col space-y-2 px-4 py-2">
+          <NuxtLink to="/" @click="mobileMenuOpen = false" class="px-3 py-2 rounded hover:bg-gray-800">Главная</NuxtLink>
+          <NuxtLink to="/statistics" @click="mobileMenuOpen = false" class="px-3 py-2 rounded hover:bg-gray-800">Статистика</NuxtLink>
+          <NuxtLink to="/achievements" @click="mobileMenuOpen = false" class="px-3 py-2 rounded hover:bg-gray-800">Достижения</NuxtLink>
+          <NuxtLink to="/settings" @click="mobileMenuOpen = false" class="px-3 py-2 rounded hover:bg-gray-800">Настройки</NuxtLink>
+        </div>
+      </div>
+    </div>
+    
+    <main class="container mx-auto px-4 py-6">
+      <div class="w-full max-w-5xl mx-auto">
+        <NuxtPage />
+      </div>
+    </main>
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useUserStore } from '~/stores/user';
 
 const userStore = useUserStore();
+const mobileMenuOpen = ref(false);
 
 onMounted(() => {
   userStore.initialize();
 });
 </script>
-
-<style>
-:root {
-  --primary-color: #4CAF50;
-  --secondary-color: #2196F3;
-  --warning-color: #FF9800;
-  --danger-color: #F44336;
-  --text-color: #333;
-  --background-color: #f5f5f5;
-  --card-bg: white;
-  --success-color: #8BC34A;
-}
-
-html, body {
-  margin: 0;
-  padding: 0;
-  font-family: 'Roboto', 'Arial', sans-serif;
-  color: var(--text-color);
-  background-color: var(--background-color);
-}
-
-.app-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem;
-}
-
-.card {
-  background: var(--card-bg);
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-.btn {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.btn-primary {
-  background-color: var(--primary-color);
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: #3d8b40;
-}
-
-.btn-danger {
-  background-color: var(--danger-color);
-  color: white;
-}
-
-.btn-danger:hover {
-  background-color: #d32f2f;
-}
-</style>

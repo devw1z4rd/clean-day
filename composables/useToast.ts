@@ -1,0 +1,1 @@
+export const useToast = () => useNuxtApp().$toast;

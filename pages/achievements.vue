@@ -1,55 +1,90 @@
 <template>
-  <div class="achievements-page">
-    <h1>Ваши достижения</h1>
+  <div>
+    <h1 class="text-2xl md:text-3xl font-bold text-center text-primary-600 dark:text-primary-400 mb-8">
+      Ваши достижения
+    </h1>
     
-    <div class="progress-container card">
-      <div class="progress-bar-container">
-        <div class="progress-bar" :style="{ width: `${achievementsStore.achievementProgress}%` }"></div>
+    <UCard class="mb-8" :ui="{ ring: '', divide: '', body: { base: 'p-6' } }">
+      <UProgress
+        :value="achievementsStore.achievementProgress"
+        color="primary"
+        size="lg"
+        class="mb-3"
+      />
+      <div class="text-center text-gray-700 dark:text-gray-300">
+        Открыто <span class="font-semibold">{{ achievementsStore.unlockedCount }}</span> 
+        из <span class="font-semibold">{{ achievementsStore.achievements.length }}</span> достижений
+        (<span class="font-semibold">{{ achievementsStore.achievementProgress }}%</span>)
       </div>
-      <div class="progress-text">
-        Открыто {{ achievementsStore.unlockedCount }} из {{ achievementsStore.achievements.length }} достижений
-        ({{ achievementsStore.achievementProgress }}%)
-      </div>
-    </div>
+    </UCard>
     
     <div v-if="userStore.hasQuit">
-      <div class="achievements-grid">
-        <div 
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        <UCard
           v-for="achievement in achievementsStore.achievements" 
           :key="achievement.id" 
-          class="achievement-card"
-          :class="{ 'unlocked': achievement.unlocked, 'locked': !achievement.unlocked }"
+          class="relative transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+          :class="achievement.unlocked ? 'border-t-4 border-t-green-500' : 'border-t-4 border-t-gray-300 dark:border-t-gray-600 opacity-80'"
+          :ui="{ ring: '', body: { base: 'p-5' } }"
         >
-          <div class="achievement-icon">
-            <span class="icon">{{ getEmojiForIcon(achievement.icon) }}</span>
+          <div class="absolute top-3 right-3">
+            <UBadge 
+              :color="achievement.unlocked ? 'green' : 'gray'" 
+              :variant="achievement.unlocked ? 'solid' : 'soft'"
+              class="text-xs uppercase tracking-wider"
+            >
+              {{ achievement.unlocked ? 'Получено' : 'Заблокировано' }}
+            </UBadge>
           </div>
-          <div class="achievement-info">
-            <h3>{{ achievement.title }}</h3>
-            <p v-if="achievement.unlocked" class="achievement-description">
-              {{ achievement.description }}
-            </p>
-            <p v-else class="achievement-hint">
-              {{ getAchievementHint(achievement) }}
-            </p>
+          
+          <div class="flex flex-col items-center mb-4">
+            <div class="h-16 w-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-3xl mb-4">
+              {{ getEmojiForIcon(achievement.icon) }}
+            </div>
+            <h3 class="text-lg font-semibold mb-2 text-center" :class="achievement.unlocked ? 'text-primary-600 dark:text-primary-400' : 'text-gray-600 dark:text-gray-400'">
+              {{ achievement.title }}
+            </h3>
           </div>
-          <div class="achievement-status">
-            <span v-if="achievement.unlocked" class="status-badge unlocked">Получено</span>
-            <span v-else class="status-badge locked">Заблокировано</span>
-          </div>
-        </div>
+          
+          <p v-if="achievement.unlocked" class="text-gray-700 dark:text-gray-300 text-center">
+            {{ achievement.description }}
+          </p>
+          <p v-else class="text-gray-500 dark:text-gray-400 text-center italic">
+            {{ getAchievementHint(achievement) }}
+          </p>
+        </UCard>
       </div>
     </div>
     
-    <div v-else class="no-data-message card">
-      <h2>Начните свой путь к здоровью</h2>
-      <p>Укажите дату отказа от курения на главной странице, чтобы начать получать достижения.</p>
-      <NuxtLink to="/" class="btn btn-primary">Перейти на главную</NuxtLink>
+    <div v-else>
+      <UCard :ui="{ ring: '', header: { padding: 'p-6' }, body: { base: 'px-6 py-10' }, footer: { padding: 'p-6' } }">
+        <template #header>
+          <h2 class="text-xl font-semibold text-center">Начните свой путь к здоровью</h2>
+        </template>
+        
+        <p class="text-center text-lg text-gray-700 dark:text-gray-300 mb-6">
+          Укажите дату отказа от курения на главной странице, чтобы начать получать достижения.
+        </p>
+        
+        <template #footer>
+          <div class="flex justify-center">
+            <UButton
+              to="/"
+              color="primary"
+              size="lg"
+              class="rounded-full px-6"
+            >
+              Перейти на главную
+            </UButton>
+          </div>
+        </template>
+      </UCard>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { onMounted } from 'vue';
 import { useUserStore } from '~/stores/user';
 import { useAchievementsStore } from '~/stores/achievements';
 
@@ -98,201 +133,3 @@ onMounted(() => {
   achievementsStore.checkAchievements();
 });
 </script>
-
-<style scoped>
-.achievements-page {
-  max-width: 1000px;
-  margin: 0 auto;
-}
-
-h1 {
-  text-align: center;
-  color: var(--primary-color);
-  margin-bottom: 2rem;
-  font-size: 2.25rem;
-}
-
-.progress-container {
-  padding: 2rem;
-  margin-bottom: 2.5rem;
-  text-align: center;
-  border-radius: var(--border-radius);
-  background-color: var(--card-bg);
-  border-top: 4px solid var(--primary-color);
-}
-
-.progress-bar-container {
-  height: 16px;
-  background-color: rgba(0, 0, 0, 0.05);
-  border-radius: 8px;
-  overflow: hidden;
-  margin-bottom: 1rem;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.progress-bar {
-  height: 100%;
-  background-image: linear-gradient(to right, var(--primary-color), var(--primary-dark));
-  border-radius: 8px;
-  transition: width 0.5s ease;
-}
-
-.progress-text {
-  font-size: 1.1rem;
-  color: var(--text-color);
-  font-weight: 500;
-}
-
-.achievements-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.achievement-card {
-  background-color: var(--card-bg);
-  border-radius: 12px;
-  padding: 1.75rem;
-  box-shadow: var(--box-shadow);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  transition: all 0.3s ease;
-  overflow: hidden;
-}
-
-.achievement-card.unlocked {
-  border-top: 4px solid var(--success-color);
-}
-
-.achievement-card.locked {
-  border-top: 4px solid #ccc;
-  opacity: 0.8;
-  filter: grayscale(40%);
-}
-
-.achievement-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-}
-
-.achievement-icon {
-  font-size: 2.5rem;
-  margin-bottom: 1.25rem;
-  text-align: center;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.achievement-info {
-  flex: 1;
-}
-
-.achievement-info h3 {
-  margin-top: 0;
-  margin-bottom: 0.75rem;
-  color: var(--primary-color);
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.achievement-description, .achievement-hint {
-  color: var(--text-color);
-  margin: 0;
-  line-height: 1.5;
-}
-
-.achievement-hint {
-  font-style: italic;
-  color: var(--text-light);
-}
-
-.achievement-status {
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-}
-
-.status-badge {
-  display: inline-block;
-  padding: 0.35rem 0.75rem;
-  border-radius: 30px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.status-badge.unlocked {
-  background-color: var(--success-color);
-  color: white;
-}
-
-.status-badge.locked {
-  background-color: #ddd;
-  color: #666;
-}
-
-.no-data-message {
-  text-align: center;
-  padding: 3.5rem 2rem;
-  border-radius: var(--border-radius);
-  background-color: var(--card-bg);
-  border-top: 4px solid var(--primary-color);
-}
-
-.no-data-message h2 {
-  margin-top: 0;
-  color: var(--primary-color);
-  font-size: 1.75rem;
-  margin-bottom: 1rem;
-}
-
-.no-data-message p {
-  margin-bottom: 2rem;
-  font-size: 1.1rem;
-  color: var(--text-color);
-}
-
-.no-data-message .btn {
-  padding: 0.75rem 2rem;
-  font-weight: 600;
-  font-size: 1rem;
-  border-radius: 30px;
-}
-
-@media (max-width: 768px) {
-  .achievements-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1rem;
-  }
-  
-  .progress-container {
-    padding: 1.5rem;
-  }
-  
-  h1 {
-    font-size: 1.75rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .achievement-card {
-    padding: 1.25rem;
-  }
-  
-  .achievement-icon {
-    font-size: 2rem;
-    height: 50px;
-    margin-bottom: 1rem;
-  }
-  
-  .achievement-status {
-    top: 1.25rem;
-    right: 1.25rem;
-  }
-}
-</style>
