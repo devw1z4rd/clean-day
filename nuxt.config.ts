@@ -1,11 +1,24 @@
 export default defineNuxtConfig({
+  ssr: true,
+  app: {
+    baseURL: '/clean-day/'
+  },
+  nitro: {
+    preset: 'github-pages',
+    prerender: {
+      failOnError: false,
+      routes: [] 
+    }
+  },
+  routeRules: {
+    '/': { ssr: true, prerender: false }, 
+    '/**': { ssr: true }
+  },
   devtools: { enabled: true },
-
-  modules: [
-    '@nuxt/ui',
-    '@pinia/nuxt',
-    '@nuxtjs/color-mode',
-    '@nuxtjs/tailwindcss',
-  ],
-  compatibilityDate: '2025-03-04',
-});
+  typescript: {
+    strict: true
+  },
+  experimental: {
+    renderJsonPayloads: true
+  }
+})

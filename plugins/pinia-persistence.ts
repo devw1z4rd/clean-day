@@ -1,5 +1,13 @@
-export default defineNuxtPlugin(async (nuxtApp) => {
-  if (typeof window !== 'undefined') {
+export default defineNuxtPlugin((nuxtApp) => {
+  // Server-side handling
+  if (process.server) {
+    // No initialization needed during SSR
+    // This avoids the "Cannot read properties of undefined (reading '_s')" error
+    return;
+  }
+  
+  // Client-side initialization with persistence
+  if (process.client) {
     nuxtApp.hook('app:mounted', async () => {
       try {
         const userModule = await import('~/stores/user');
