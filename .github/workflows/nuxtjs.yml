@@ -3,16 +3,13 @@ on:
   push:
     branches: ["main"]
   workflow_dispatch:
-
 permissions:
   contents: read
   pages: write
   id-token: write
-
 concurrency:
   group: "pages"
   cancel-in-progress: false
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -34,24 +31,33 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
-      - name: Update nuxt.config.js for SSG
+      - name: Update nuxt.config.ts
         run: |
-          cp nuxt.config.js nuxt.config.backup.js
-          
-          cat > nuxt.config.js << EOF
+          cat > nuxt.config.ts << EOF
           export default defineNuxtConfig({
             ssr: true,
+            app: {
+              baseURL: '/clean-day/'
+            },
             nitro: {
               preset: 'github-pages',
               prerender: {
-                failOnError: false
+                failOnError: false,
+                routes: ['/']
               }
             },
             routeRules: {
               '/': { prerender: true },
+              '/**': { ssr: true }
             },
-            $(grep -v "export default defineNuxtConfig" nuxt.config.backup.js | grep -v "{" | grep -v "}")
-          });
+            devtools: { enabled: true },
+            typescript: {
+              strict: true
+            },
+            experimental: {
+              renderJsonPayloads: true
+            }
+          })
           EOF
       
       - name: Generate static site
