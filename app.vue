@@ -2,16 +2,19 @@
   <NuxtLayout>
     <NuxtPage />
   </NuxtLayout>
-
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, nextTick } from 'vue';
 import { useUserStore } from '~/stores/user';
 
-const userStore = useUserStore();
-
-onMounted(() => {
-  userStore.initialize();
+onMounted(async () => {
+  await nextTick();
+  try {
+    const userStore = useUserStore();
+    userStore.initialize();
+  } catch (error) {
+    console.error('Error initializing user store in app.vue:', error);
+  }
 });
 </script>

@@ -58,21 +58,30 @@ export const useAchievementsStore = defineStore('achievements', {
 
   actions: {
     initialize() {
-      if (typeof window !== 'undefined') {
-        const savedAchievements = localStorage.getItem('clean-day-achievements');
-        if (savedAchievements) {
-          this.unlockedAchievements = JSON.parse(savedAchievements);
+      if (process.client && typeof window !== 'undefined') {
+        try {
+          const savedAchievements = localStorage.getItem('clean-day-achievements');
+          if (savedAchievements) {
+            this.unlockedAchievements = JSON.parse(savedAchievements);
+          }
+        } catch (error) {
+          console.error('Error initializing achievements store:', error);
         }
       }
     },
 
     saveAchievements() {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('clean-day-achievements', JSON.stringify(this.unlockedAchievements));
+      if (process.client && typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('clean-day-achievements', JSON.stringify(this.unlockedAchievements));
+        } catch (error) {
+          console.error('Error saving achievements:', error);
+        }
       }
     },
 
     checkAchievements() {
+      if (!process.client) return;
       const userStore = useUserStore();
       if (!userStore.quitDate) return;
       const days = userStore.timeSinceQuit.days;

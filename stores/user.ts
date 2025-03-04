@@ -65,28 +65,36 @@ export const useUserStore = defineStore('user', {
 
   actions: {
     initialize() {
-      if (typeof window !== 'undefined') {
-        const savedState = localStorage.getItem('clean-day-user');
-        if (savedState) {
-          const parsedState = JSON.parse(savedState);
-          this.$patch(parsedState);
+      if (process.client && typeof window !== 'undefined') {
+        try {
+          const savedState = localStorage.getItem('clean-day-user');
+          if (savedState) {
+            const parsedState = JSON.parse(savedState);
+            this.$patch(parsedState);
+          }
+          this.initialized = true;
+        } catch (error) {
+          console.error('Error initializing user store:', error);
         }
-        this.initialized = true;
       }
     },
 
     saveState() {
-      if (typeof window !== 'undefined') {
-        const stateToSave = {
-          quitDate: this.quitDate,
-          cigarettesPerDay: this.cigarettesPerDay,
-          cigarettePrice: this.cigarettePrice,
-          cigarettesInPack: this.cigarettesInPack,
-          notifications: this.notifications,
-          achievementNotifications: this.achievementNotifications,
-          darkMode: this.darkMode,
-        };
-        localStorage.setItem('clean-day-user', JSON.stringify(stateToSave));
+      if (process.client && typeof window !== 'undefined') {
+        try {
+          const stateToSave = {
+            quitDate: this.quitDate,
+            cigarettesPerDay: this.cigarettesPerDay,
+            cigarettePrice: this.cigarettePrice,
+            cigarettesInPack: this.cigarettesInPack,
+            notifications: this.notifications,
+            achievementNotifications: this.achievementNotifications,
+            darkMode: this.darkMode,
+          };
+          localStorage.setItem('clean-day-user', JSON.stringify(stateToSave));
+        } catch (error) {
+          console.error('Error saving user state:', error);
+        }
       }
     },
 
