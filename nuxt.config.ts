@@ -1,18 +1,10 @@
 export default defineNuxtConfig({
-  ssr: true,
+  ssr: false, 
   app: {
     baseURL: '/clean-day/'
   },
   nitro: {
-    preset: 'github-pages',
-    prerender: {
-      failOnError: false,
-      routes: [] 
-    }
-  },
-  routeRules: {
-    '/': { ssr: true, prerender: false }, 
-    '/**': { ssr: true }
+    preset: 'github-pages'
   },
   devtools: { enabled: true },
   typescript: {
