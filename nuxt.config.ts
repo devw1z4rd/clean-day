@@ -35,5 +35,10 @@ export default defineNuxtConfig({
     '@nuxtjs/tailwindcss',
   ],
 
+  plugins: [
+    '~/plugins/pinia-persistence.ts',
+    '~/plugins/spa-redirect.client.ts'
+  ],
+
   compatibilityDate: '2025-03-04'
 })
