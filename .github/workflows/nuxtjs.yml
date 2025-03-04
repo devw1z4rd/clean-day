@@ -56,8 +56,15 @@ jobs:
           })
           EOF
       
-      - name: Generate static site
-        run: npm run generate
+      # Add this step to help debugging
+      - name: Create fallback .nojekyll file
+        run: touch .nojekyll
+      
+      # Modify the build command to skip SSR/prerendering entirely 
+      - name: Build client-side only files
+        run: |
+          npm run build
+          [ -d ".output/public" ] && cp -r .output/public dist || echo "Using default dist directory"
         env:
           NUXT_APP_BASE_URL: '/clean-day/'
       

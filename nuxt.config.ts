@@ -10,6 +10,11 @@ export default defineNuxtConfig({
     prerender: {
       failOnError: false,
       routes: ['/']
+    },
+    hooks: {
+      'prerender:route': (route) => {
+        console.log(`Prerendering ${route}`)
+      }
     }
   },
 

@@ -58,32 +58,38 @@ export const useAchievementsStore = defineStore('achievements', {
 
   actions: {
     initialize() {
-      if (process.client && typeof window !== 'undefined') {
-        try {
-          const savedAchievements = localStorage.getItem('clean-day-achievements');
-          if (savedAchievements) {
-            this.unlockedAchievements = JSON.parse(savedAchievements);
-          }
-        } catch (error) {
-          console.error('Error initializing achievements store:', error);
+      if (typeof window === 'undefined' || !process.client) {
+        return;
+      }
+
+      try {
+        const savedAchievements = localStorage.getItem('clean-day-achievements');
+        if (savedAchievements) {
+          this.unlockedAchievements = JSON.parse(savedAchievements);
         }
+      } catch (error) {
+        console.error('Error initializing achievements store:', error);
       }
     },
 
     saveAchievements() {
-      if (process.client && typeof window !== 'undefined') {
-        try {
-          localStorage.setItem('clean-day-achievements', JSON.stringify(this.unlockedAchievements));
-        } catch (error) {
-          console.error('Error saving achievements:', error);
-        }
+      if (typeof window === 'undefined' || !process.client) {
+        return;
+      }
+
+      try {
+        localStorage.setItem('clean-day-achievements', JSON.stringify(this.unlockedAchievements));
+      } catch (error) {
+        console.error('Error saving achievements:', error);
       }
     },
 
     checkAchievements() {
-      if (!process.client) return;
+      if (typeof window === 'undefined' || !process.client) return;
+
       const userStore = useUserStore();
       if (!userStore.quitDate) return;
+      
       const days = userStore.timeSinceQuit.days;
       const money = userStore.moneySaved;
       const cigarettes = userStore.cigarettesNotSmoked;

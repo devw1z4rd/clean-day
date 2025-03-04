@@ -1,5 +1,5 @@
 export default defineNuxtPlugin((nuxtApp) => {
-  if (!process.client) {
+  if (typeof window === 'undefined' || !process.client) {
     return;
   }
 

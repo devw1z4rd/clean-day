@@ -34,7 +34,8 @@ export const useUserStore = defineStore('user', {
   getters: {
     timeElapsed: (state): number => {
       if (!state.quitDate) return 0;
-      return Date.now() - new Date(state.quitDate).getTime();
+      const now = typeof window !== 'undefined' ? Date.now() : new Date().getTime();
+      return now - new Date(state.quitDate).getTime();
     },
 
     timeSinceQuit(): TimeSinceQuit {
@@ -65,36 +66,42 @@ export const useUserStore = defineStore('user', {
 
   actions: {
     initialize() {
-      if (process.client && typeof window !== 'undefined') {
-        try {
-          const savedState = localStorage.getItem('clean-day-user');
-          if (savedState) {
-            const parsedState = JSON.parse(savedState);
-            this.$patch(parsedState);
-          }
-          this.initialized = true;
-        } catch (error) {
-          console.error('Error initializing user store:', error);
+      if (typeof window === 'undefined' || !process.client) {
+        this.initialized = true;
+        return;
+      }
+
+      try {
+        const savedState = localStorage.getItem('clean-day-user');
+        if (savedState) {
+          const parsedState = JSON.parse(savedState);
+          this.$patch(parsedState);
         }
+        this.initialized = true;
+      } catch (error) {
+        console.error('Error initializing user store:', error);
+        this.initialized = true;
       }
     },
 
     saveState() {
-      if (process.client && typeof window !== 'undefined') {
-        try {
-          const stateToSave = {
-            quitDate: this.quitDate,
-            cigarettesPerDay: this.cigarettesPerDay,
-            cigarettePrice: this.cigarettePrice,
-            cigarettesInPack: this.cigarettesInPack,
-            notifications: this.notifications,
-            achievementNotifications: this.achievementNotifications,
-            darkMode: this.darkMode,
-          };
-          localStorage.setItem('clean-day-user', JSON.stringify(stateToSave));
-        } catch (error) {
-          console.error('Error saving user state:', error);
-        }
+      if (typeof window === 'undefined' || !process.client) {
+        return;
+      }
+
+      try {
+        const stateToSave = {
+          quitDate: this.quitDate,
+          cigarettesPerDay: this.cigarettesPerDay,
+          cigarettePrice: this.cigarettePrice,
+          cigarettesInPack: this.cigarettesInPack,
+          notifications: this.notifications,
+          achievementNotifications: this.achievementNotifications,
+          darkMode: this.darkMode,
+        };
+        localStorage.setItem('clean-day-user', JSON.stringify(stateToSave));
+      } catch (error) {
+        console.error('Error saving user state:', error);
       }
     },
 
