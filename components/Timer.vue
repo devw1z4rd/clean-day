@@ -5,11 +5,12 @@
         Время без курения
       </h2>
     </template>
-    
+
     <div v-if="userStore.hasQuit" class="py-6 flex flex-col items-center">
       <div class="grid grid-cols-4 gap-4 text-center">
         <div v-for="(unit, index) in timeUnits" :key="index" class="flex flex-col items-center">
-          <div class="w-24 h-24 flex items-center justify-center bg-primary-500 text-white text-3xl font-bold rounded-lg shadow-md">
+          <div
+            class="w-24 h-24 flex items-center justify-center bg-primary-500 text-white text-3xl font-bold rounded-lg shadow-md">
             {{ unit.value }}
           </div>
           <div class="text-sm text-gray-600 dark:text-gray-400 mt-2 uppercase tracking-wide">
@@ -18,41 +19,16 @@
         </div>
       </div>
     </div>
-    
+
     <div v-else class="py-10 text-center">
       <p class="text-lg mb-6 text-gray-700 dark:text-gray-300">
         Начните свой путь к здоровому образу жизни прямо сейчас!
       </p>
-      <UButton
-        color="primary"
-        size="xl"
-        @click="startQuit"
-        class="rounded-full px-8 shadow-md hover:bg-primary-700 transition"
-      >
+      <UButton color="primary" size="xl" @click="startQuit"
+        class="rounded-full px-8 shadow-md hover:bg-primary-700 transition">
         Бросить курить
       </UButton>
     </div>
-    
-    <UModal v-model="showResetConfirm">
-      <UCard>
-        <template #header>
-          <div class="text-lg font-semibold text-center">Подтверждение сброса</div>
-        </template>
-        <p class="text-center text-gray-700 dark:text-gray-300">
-          Вы действительно хотите сбросить свой прогресс? Это действие нельзя отменить.
-        </p>
-        <template #footer>
-          <div class="flex justify-between gap-4">
-            <UButton color="gray" @click="showResetConfirm = false">
-              Отмена
-            </UButton>
-            <UButton color="red" @click="resetProgress">
-              Да, сбросить
-            </UButton>
-          </div>
-        </template>
-      </UCard>
-    </UModal>
   </UCard>
 </template>
 

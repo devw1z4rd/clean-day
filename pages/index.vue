@@ -1,128 +1,110 @@
 <template>
   <div>
     <Timer />
-    
+
     <div v-if="userStore.hasQuit">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <UCard v-for="(stat, index) in statsData" :key="index"
-          class="transition-all hover:-translate-y-1 duration-300"
+        <UCard v-for="(stat, index) in statsData" :key="index" class="transition-all hover:-translate-y-1 duration-300"
           :ui="{
             ring: '',
             header: { padding: 'px-6 py-4' },
             body: { base: 'p-4' }
-          }" 
-          :class="{
+          }" :class="{
             'border-b-4 border-b-primary-500': index === 0,
             'border-b-4 border-b-blue-500': index === 1,
             'border-b-4 border-b-yellow-500': index === 2
           }">
           <div class="flex items-center">
-            <div class="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center mr-4" 
-              :class="{
-                'bg-primary-50 text-primary-500': index === 0,
-                'bg-blue-50 text-blue-500': index === 1,
-                'bg-yellow-50 text-yellow-500': index === 2
-              }">
+            <div class="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center mr-4" :class="{
+              'bg-primary-50 text-primary-500': index === 0,
+              'bg-blue-50 text-blue-500': index === 1,
+              'bg-yellow-50 text-yellow-500': index === 2
+            }">
               <span class="text-2xl">{{ stat.icon }}</span>
             </div>
             <div>
               <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                 {{ stat.title }}
               </h3>
-              <div class="text-xl md:text-2xl font-bold mt-1" 
-                :class="{
-                  'text-primary-600': index === 0,
-                  'text-blue-600': index === 1,
-                  'text-yellow-600': index === 2
-                }">
+              <div class="text-xl md:text-2xl font-bold mt-1" :class="{
+                'text-primary-600': index === 0,
+                'text-blue-600': index === 1,
+                'text-yellow-600': index === 2
+              }">
                 {{ stat.value }}
               </div>
             </div>
           </div>
         </UCard>
       </div>
-      
-      <UCard 
+
+      <UCard
         class="mb-8 bg-primary-50 dark:bg-primary-950 dark:bg-opacity-30 border border-primary-100 dark:border-primary-900"
-        :ui="{ 
-          ring: '', 
-          header: { padding: 'px-6 py-4' }, 
+        :ui="{
+          ring: '',
+          header: { padding: 'px-6 py-4' },
           body: { base: 'p-5' },
-          footer: { padding: 'px-6 py-4' } 
+          footer: { padding: 'px-6 py-4' }
         }">
         <template #header>
           <h2 class="text-xl font-semibold text-primary-700 dark:text-primary-300 text-center">
             Факт дня
           </h2>
         </template>
-        
-        <p class="text-lg text-gray-700 dark:text-gray-300 italic text-center">
-          {{ currentFact }}
-        </p>
-        
+
+        <transition name="fade" mode="out-in">
+          <p :key="currentFact" class="text-lg text-gray-700 dark:text-gray-300 italic text-center">
+            {{ currentFact }}
+          </p>
+        </transition>
+
         <template #footer>
           <div class="flex justify-center">
-            <UButton
-              color="primary"
-              variant="soft"
-              @click="getRandomFact"
-              icon="i-heroicons-arrow-path"
-              class="rounded-full"
-            >
+            <UButton color="primary" variant="soft" @click="getRandomFact" icon="i-heroicons-arrow-path"
+              class="rounded-full">
               Новый факт
             </UButton>
           </div>
         </template>
       </UCard>
 
-      <UCard class="mb-8" :ui="{ 
-        ring: '', 
-        header: { padding: 'px-6 py-4' }, 
+      <UCard class="mb-8" :ui="{
+        ring: '',
+        header: { padding: 'px-6 py-4' },
         body: { base: 'p-5' },
-        footer: { padding: 'px-0 py-0' } 
+        footer: { padding: 'px-0 py-0' }
       }">
         <template #header>
           <h2 class="text-xl font-semibold text-center">
             Улучшения здоровья
           </h2>
         </template>
-        
-        <UTabs 
-          :items="[
-            { label: 'Все', slot: 'all' },
-            { label: 'Достигнуто', slot: 'active' },
-            { label: 'Предстоит', slot: 'upcoming' }
-          ]"
-          class="mb-4"
-        >
+
+        <UTabs :items="[
+          { label: 'Все', slot: 'all' },
+          { label: 'Достигнуто', slot: 'active' },
+          { label: 'Предстоит', slot: 'upcoming' }
+        ]" class="mb-4">
           <template #all>
             <ul class="space-y-3 pt-4">
-              <li 
-                v-for="(item, index) in healthImprovements" 
-                :key="index" 
-                class="p-3 rounded-md"
-                :class="isActive(item.time) ? 'bg-primary-50 dark:bg-primary-900/30 border-l-4 border-l-primary-500' : 'bg-gray-50 dark:bg-gray-800/30 border-l-4 border-l-gray-200 dark:border-l-gray-700'"
-              >
-                <span 
-                  class="font-bold mr-2"
-                  :class="isActive(item.time) ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'"
-                >
+              <li v-for="(item, index) in healthImprovements" :key="index" class="p-3 rounded-md"
+                :class="isActive(item.time) ? 'bg-primary-50 dark:bg-primary-900/30 border-l-4 border-l-primary-500' : 'bg-gray-50 dark:bg-gray-800/30 border-l-4 border-l-gray-200 dark:border-l-gray-700'">
+                <span class="font-bold mr-2"
+                  :class="isActive(item.time) ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'">
                   {{ item.time }}:
                 </span>
-                <span :class="isActive(item.time) ? 'text-gray-800 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'">
+                <span
+                  :class="isActive(item.time) ? 'text-gray-800 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'">
                   {{ item.description }}
                 </span>
               </li>
             </ul>
           </template>
-          
+
           <template #active>
             <ul class="space-y-3 pt-4">
-              <li 
-                v-for="(item, index) in healthImprovements.filter(item => isActive(item.time))" 
-                :key="index" 
-                class="p-3 rounded-md bg-primary-50 dark:bg-primary-900/30 border-l-4 border-l-primary-500"
-              >
+              <li v-for="(item, index) in healthImprovements.filter(item => isActive(item.time))" :key="index"
+                class="p-3 rounded-md bg-primary-50 dark:bg-primary-900/30 border-l-4 border-l-primary-500">
                 <span class="font-bold mr-2 text-primary-600 dark:text-primary-400">
                   {{ item.time }}:
                 </span>
@@ -132,14 +114,11 @@
               </li>
             </ul>
           </template>
-          
+
           <template #upcoming>
             <ul class="space-y-3 pt-4">
-              <li 
-                v-for="(item, index) in healthImprovements.filter(item => !isActive(item.time))" 
-                :key="index" 
-                class="p-3 rounded-md bg-gray-50 dark:bg-gray-800/30 border-l-4 border-l-gray-200 dark:border-l-gray-700"
-              >
+              <li v-for="(item, index) in healthImprovements.filter(item => !isActive(item.time))" :key="index"
+                class="p-3 rounded-md bg-gray-50 dark:bg-gray-800/30 border-l-4 border-l-gray-200 dark:border-l-gray-700">
                 <span class="font-bold mr-2 text-gray-500 dark:text-gray-400">
                   {{ item.time }}:
                 </span>
@@ -224,10 +203,10 @@ const getRandomFact = () => {
 
 const isActive = (timeStr) => {
   if (!userStore.hasQuit) return false;
-  
+
   const days = userStore.timeSinceQuit.days;
   const hours = days * 24 + userStore.timeSinceQuit.hours;
-  
+
   const timeMap = {
     '20 минут': hours > 0,
     '12 часов': hours >= 12,
@@ -243,7 +222,7 @@ const isActive = (timeStr) => {
     '10 лет': days >= 3650,
     '15 лет': days >= 5475,
   };
-  
+
   return timeMap[timeStr] || false;
 };
 
@@ -253,3 +232,15 @@ onMounted(() => {
   achievementsStore.checkAchievements();
 });
 </script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>
