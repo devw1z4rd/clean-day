@@ -1,44 +1,29 @@
 export default defineNuxtConfig({
   ssr: false,
-
+  
   app: {
-    baseURL: '/clean-day/'
+    baseURL: '/clean-day/',
+    buildAssetsDir: '/_nuxt/'
   },
-
+  
   nitro: {
-    preset: 'github-pages',
-    prerender: {
-      failOnError: false,
-      routes: ['/']
-    },
-    hooks: {
-      'prerender:route': (route) => {
-        console.log(`Prerendering ${route}`)
-      }
-    }
+    preset: 'github-pages'
   },
-
+  
   devtools: { enabled: true },
-
+  
   typescript: {
     strict: true
   },
-
+  
   experimental: {
     renderJsonPayloads: true
   },
-
+  
   modules: [
     '@nuxt/ui',
     '@pinia/nuxt',
     '@nuxtjs/color-mode',
     '@nuxtjs/tailwindcss',
   ],
-
-  plugins: [
-    '~/plugins/pinia-persistence.ts',
-    '~/plugins/spa-redirect.client.ts'
-  ],
-
-  compatibilityDate: '2025-03-04'
 })

@@ -25,76 +25,79 @@ jobs:
       
       - name: Setup Pages
         uses: actions/configure-pages@v5
-        with:
-          static_site_generator: nuxt
       
       - name: Install dependencies
         run: npm ci
       
-      - name: Update nuxt.config.ts
+      - name: Create simplified nuxt.config.ts
         run: |
           cat > nuxt.config.ts << EOF
+          // https://nuxt.com/docs/api/configuration/nuxt-config
           export default defineNuxtConfig({
+            // Force client-side rendering only
             ssr: false,
+            
+            // Set base URL for GitHub Pages
             app: {
-              baseURL: '/clean-day/'
+              baseURL: '/clean-day/',
+              buildAssetsDir: '/clean-day/_nuxt/'
             },
+            
+            // Simple GitHub Pages configuration
             nitro: {
               preset: 'github-pages',
-              prerender: {
-                failOnError: false,
-                crawlLinks: false,
-                routes: ['/']
+              output: {
+                publicDir: 'dist'
               }
             },
+            
             devtools: { enabled: true },
-            typescript: {
-              strict: true
-            },
-            experimental: {
-              renderJsonPayloads: true
-            }
+            
+            // Include your modules
+            modules: [
+              '@nuxt/ui',
+              '@pinia/nuxt',
+              '@nuxtjs/color-mode',
+              '@nuxtjs/tailwindcss',
+            ],
           })
           EOF
       
-      - name: Build client-side only files
+      - name: Build only
         run: npm run build
         env:
           NUXT_APP_BASE_URL: '/clean-day/'
       
-      # Create essential GitHub Pages files
-      - name: Create GitHub Pages special files
+      - name: Create necessary GitHub Pages files
         run: |
-          # Create .nojekyll file to bypass Jekyll processing
+          # Create .nojekyll in output directory
           touch .output/public/.nojekyll
           
-          # Ensure the dist directory exists
-          mkdir -p dist
-          
-          # Copy all files from .output/public to dist
+          # Copy all output files to dist
           cp -r .output/public/* dist/
-          
-          # Create .nojekyll in dist too
+
+          # Ensure index.html exists
+          if [ ! -f "dist/index.html" ]; then
+            echo "index.html not found! Creating a basic one."
+            cat > dist/index.html << EOF
+            <!DOCTYPE html>
+            <html>
+              <head>
+                <meta charset="utf-8">
+                <title>Clean Day App</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <link rel="stylesheet" href="./clean-day/_nuxt/entry.css">
+              </head>
+              <body>
+                <div id="__nuxt"></div>
+                <script type="module" src="./clean-day/_nuxt/entry.js"></script>
+              </body>
+            </html>
+            EOF
+          fi
+
+          # Create .nojekyll in dist
           touch dist/.nojekyll
-          
-          # Create a 404.html that redirects to index.html
-          cat > dist/404.html << EOF
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <meta charset="utf-8">
-              <title>Clean Day App</title>
-              <script>
-                // Redirect all 404s to index.html for SPA routing
-                sessionStorage.setItem('redirectPath', window.location.pathname);
-                window.location.href = '/clean-day/';
-              </script>
-            </head>
-            <body>
-              <p>Redirecting...</p>
-            </body>
-          </html>
-          EOF
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
