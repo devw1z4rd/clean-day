@@ -130,6 +130,47 @@
           </template>
         </UTabs>
       </UCard>
+
+      <div class="mb-8">
+        <h2 class="text-xl font-semibold text-center mb-6">
+          Часто задаваемые вопросы
+        </h2>
+
+        <div class="grid grid-cols-1 gap-6">
+          <UCard v-for="(item, index) in faqItems" :key="index" 
+            class="overflow-hidden hover:shadow-lg transition-all duration-300"
+            :class="{
+              'border-l-4 border-l-primary-500': index === 0,
+              'border-l-4 border-l-blue-500': index === 1,
+              'border-l-4 border-l-yellow-500': index === 2
+            }"
+          >
+            <div class="flex items-start p-5">
+              <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0 mr-4"
+                :class="{
+                  'bg-primary-100 text-primary-600 dark:bg-primary-900/40 dark:text-primary-400': index === 0,
+                  'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400': index === 1,
+                  'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/40 dark:text-yellow-400': index === 2
+                }">
+                <UIcon name="i-heroicons-question-mark-circle" class="text-xl" />
+              </div>
+              <div>
+                <h3 class="text-lg font-bold mb-3"
+                  :class="{
+                    'text-primary-700 dark:text-primary-300': index === 0,
+                    'text-blue-700 dark:text-blue-300': index === 1,
+                    'text-yellow-700 dark:text-yellow-300': index === 2
+                  }">
+                  {{ item.question }}
+                </h3>
+                <p class="text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {{ item.answer }}
+                </p>
+              </div>
+            </div>
+          </UCard>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -192,6 +233,21 @@ const facts = [
   'Курение делает волосы тоньше и может привести к раннему облысению.',
   'Курение влияет на иммунную систему, делая вас более восприимчивым к инфекциям.',
   'Отказ от курения приводит к улучшению настроения и снижению стресса в долгосрочной перспективе.',
+];
+
+const faqItems = [
+  {
+    question: 'Как справиться с тягой к курению?',
+    answer: 'Тяга к курению обычно длится всего 3-5 минут. Попробуйте сделать глубокий вдох, выпить стакан воды, прогуляться или заняться чем-то, что отвлечет вас. Используйте функцию достижений в Clean Day как дополнительную мотивацию - каждый раз, когда вы преодолеваете желание закурить, вы становитесь на шаг ближе к новому достижению.'
+  },
+  {
+    question: 'Как долго продлятся симптомы отказа от курения?',
+    answer: 'Симптомы отказа от курения обычно наиболее интенсивны в первую неделю и могут включать раздражительность, беспокойство, проблемы с концентрацией и повышенный аппетит. В большинстве случаев эти симптомы значительно уменьшаются через 2-4 недели. Приложение Clean Day поможет вам отслеживать прогресс и увидеть, как каждый день без сигарет улучшает ваше здоровье.'
+  },
+  {
+    question: 'Повысится ли моя популярность среди друзей в школе?',
+    answer: 'При использовании Clean Day спина становится шире, причёска - гуще, зубы - белее, бицепсы - больше. Вы гарантировано получите внимание женщин, уважение друзей и зависть недоброжелателей.'
+  }
 ];
 
 const currentFact = ref('');

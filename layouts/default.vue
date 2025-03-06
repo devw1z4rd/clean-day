@@ -17,26 +17,29 @@
                     <NuxtLink to="/settings" class="px-3 py-2 rounded hover:bg-gray-700">Настройки</NuxtLink>
                 </div>
 
-                <button class="md:hidden px-2 py-1 rounded bg-gray-700" @click="mobileMenuOpen = !mobileMenuOpen">
-                    Меню
+                <button class="md:hidden px-2 py-1 rounded bg-gray-700" @click="toggleMobileMenu">
+                    <span v-if="!mobileMenuOpen">Меню</span>
+                    <span v-else>Закрыть</span>
                 </button>
             </div>
         </nav>
 
-        <div v-if="mobileMenuOpen" class="md:hidden bg-gray-900 text-white">
-            <div class="container mx-auto py-2">
-                <div class="flex flex-col space-y-2 px-4 py-2">
-                    <NuxtLink to="/" @click="mobileMenuOpen = false" class="px-3 py-2 rounded hover:bg-gray-800">Главная
-                    </NuxtLink>
-                    <NuxtLink to="/statistics" @click="mobileMenuOpen = false"
-                        class="px-3 py-2 rounded hover:bg-gray-800">Статистика</NuxtLink>
-                    <NuxtLink to="/achievements" @click="mobileMenuOpen = false"
-                        class="px-3 py-2 rounded hover:bg-gray-800">Достижения</NuxtLink>
-                    <NuxtLink to="/settings" @click="mobileMenuOpen = false"
-                        class="px-3 py-2 rounded hover:bg-gray-800">Настройки</NuxtLink>
+        <Transition name="slide-fade">
+            <div v-if="mobileMenuOpen" class="md:hidden bg-gray-900 text-white fixed top-14 left-0 right-0 z-40 shadow-lg">
+                <div class="container mx-auto py-2">
+                    <div class="flex flex-col space-y-2 px-4 py-2">
+                        <NuxtLink to="/" @click="closeMobileMenu" class="px-3 py-2 rounded hover:bg-gray-800">Главная
+                        </NuxtLink>
+                        <NuxtLink to="/statistics" @click="closeMobileMenu"
+                            class="px-3 py-2 rounded hover:bg-gray-800">Статистика</NuxtLink>
+                        <NuxtLink to="/achievements" @click="closeMobileMenu"
+                            class="px-3 py-2 rounded hover:bg-gray-800">Достижения</NuxtLink>
+                        <NuxtLink to="/settings" @click="closeMobileMenu"
+                            class="px-3 py-2 rounded hover:bg-gray-800">Настройки</NuxtLink>
+                    </div>
                 </div>
             </div>
-        </div>
+        </Transition>
 
         <main class="container mx-auto px-4 py-6 flex-grow">
             <div class="w-full max-w-5xl mx-auto">
@@ -73,6 +76,21 @@ const userStore = useUserStore();
 const mobileMenuOpen = ref(false);
 const typingTextElement = ref(null);
 const isTyping = ref(false);
+
+const toggleMobileMenu = () => {
+    mobileMenuOpen.value = !mobileMenuOpen.value;
+    
+    if (mobileMenuOpen.value) {
+        document.body.style.overflow = 'hidden';
+    } else {
+        document.body.style.overflow = '';
+    }
+};
+
+const closeMobileMenu = () => {
+    mobileMenuOpen.value = false;
+    document.body.style.overflow = '';
+};
 
 const startTypingAnimation = async () => {
     if (isTyping.value || !typingTextElement.value) return;
@@ -150,14 +168,27 @@ onMounted(() => {
 }
 
 @keyframes cursor-blink {
-
     0%,
     100% {
         opacity: 1;
     }
-
     50% {
         opacity: 0;
     }
+}
+
+.slide-fade-enter-active,
+.slide-fade-leave-active {
+    transition: all 0.3s ease;
+}
+
+.slide-fade-enter-from {
+    transform: translateY(-20px);
+    opacity: 0;
+}
+
+.slide-fade-leave-to {
+    transform: translateY(-20px);
+    opacity: 0;
 }
 </style>
