@@ -8,7 +8,8 @@
       class="mb-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-md">
       <template #header>
         <div class="flex items-center">
-          <h2 class="text-xl font-semibold text-primary-700 dark:text-gray-200">Информация о курении</h2>
+          <UIcon name="i-heroicons-fire" class="mr-2 text-primary-600 dark:text-primary-400" size="lg" />
+          <h2 class="text-xl font-semibold text-primary-700 dark:text-primary-400">Информация о курении</h2>
         </div>
       </template>
 
@@ -41,7 +42,7 @@
         </UFormGroup>
       </div>
       
-      <div class="mt-4 pt-4 border-t border-primary-100 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400">
+      <div class="mt-4 pt-4 border-t border-primary-100 dark:border-primary-800/50 text-sm text-gray-600 dark:text-gray-400">
         <p class="flex items-center">
           <UIcon name="i-heroicons-information-circle" class="mr-2" size="sm" />
           Эти данные используются для расчёта сэкономленных средств и других статистик
@@ -190,8 +191,15 @@
           description="Вы действительно хотите удалить все данные? Это действие нельзя отменить и все ваши достижения будут потеряны."
           color="red" variant="soft" icon="i-heroicons-exclamation-triangle" class="mb-4" />
 
-        <UFormGroup label='Введите "УДАЛИТЬ" для подтверждения:'>
-          <UInput v-model="confirmText" placeholder="УДАЛИТЬ" size="lg" class="text-base" />
+        <UFormGroup label='Введите "УДАЛИТЬ" для подтверждения:' class="modal-delete-confirm">
+          <UInput 
+            v-model="confirmText" 
+            placeholder="УДАЛИТЬ" 
+            size="lg" 
+            class="text-base" 
+            :autofocus="false"
+            tabindex="-1"
+          />
         </UFormGroup>
 
         <template #footer>
@@ -275,7 +283,7 @@ const formatDateForDisplay = (dateValue: string | Date) => {
   });
 };
 
-const showToast = (options) => {
+const showToast = (options: { title?: string; description?: string; icon?: string; color?: string; timeout?: number }) => {
   if (activeToastsCount.value >= 2) {
     toast.clear();
     activeToastsCount.value = 0;
@@ -411,6 +419,21 @@ const resetAllData = () => {
 watch(appSettings, () => {
   saveAppSettings();
 }, { deep: true });
+
+watch(showResetConfirm, (newValue) => {
+  if (newValue) {
+    // Если модальное окно открыто, сбрасываем фокус после короткой задержки
+    setTimeout(() => {
+      // Безопасный доступ к DOM-элементу через querySelector
+      const inputElement = document.querySelector('.modal-delete-confirm input');
+      if (inputElement instanceof HTMLElement) {
+        inputElement.blur();
+      }
+      // Для надежности устанавливаем фокус на тело документа
+      document.body.focus();
+    }, 50);
+  }
+});
 
 onMounted(() => {
   if (userStore.quitDate) {
