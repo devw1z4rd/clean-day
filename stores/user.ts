@@ -54,9 +54,10 @@ export const useUserStore = defineStore('user', {
       return Math.floor((this.timeElapsed / (1000 * 60 * 60 * 24)) * this.cigarettesPerDay);
     },
 
-    moneySaved(): number {
+    moneySaved(): string {
       const packsNotBought = this.cigarettesNotSmoked / this.cigarettesInPack;
-      return Math.floor(packsNotBought * this.cigarettePrice);
+      const exactAmount = packsNotBought * this.cigarettePrice;
+      return exactAmount.toFixed(2);
     },
 
     hasQuit(): boolean {

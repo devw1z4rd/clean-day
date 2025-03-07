@@ -9,11 +9,7 @@
             ring: '',
             header: { padding: 'px-6 py-4' },
             body: { base: 'p-4' }
-          }" :class="{
-            'border-b-4 border-b-primary-500': index === 0,
-            'border-b-4 border-b-blue-500': index === 1,
-            'border-b-4 border-b-yellow-500': index === 2
-          }">
+          }" >
           <div class="flex items-center">
             <div class="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center mr-4" :class="{
               'bg-primary-50 text-primary-500': index === 0,
@@ -136,36 +132,40 @@
           Часто задаваемые вопросы
         </h2>
 
-        <div class="grid grid-cols-1 gap-6">
+        <div class="grid grid-cols-1 gap-4">
           <UCard v-for="(item, index) in faqItems" :key="index" 
-            class="overflow-hidden hover:shadow-lg transition-all duration-300"
-            :class="{
-              'border-l-4 border-l-primary-500': index === 0,
-              'border-l-4 border-l-blue-500': index === 1,
-              'border-l-4 border-l-yellow-500': index === 2
-            }"
+            class="overflow-hidden transition-all duration-300"
           >
-            <div class="flex items-start p-5">
-              <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0 mr-4"
-                :class="{
-                  'bg-primary-100 text-primary-600 dark:bg-primary-900/40 dark:text-primary-400': index === 0,
-                  'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400': index === 1,
-                  'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/40 dark:text-yellow-400': index === 2
-                }">
-                <UIcon name="i-heroicons-question-mark-circle" class="text-xl" />
+            <div class="p-5">
+              <div 
+                @click="toggleFaq(index)" 
+                class="flex items-center justify-between cursor-pointer"
+              >
+                <div class="flex items-center">
+                  <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 mr-4"
+                    :class="{
+                      'bg-primary-100 text-primary-600 dark:bg-primary-900/40 dark:text-primary-400': index === 0,
+                      'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400': index === 1,
+                      'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/40 dark:text-yellow-400': index === 2
+                    }">
+                    <UIcon name="i-heroicons-question-mark-circle" class="text-xl" />
+                  </div>
+                  <h3 class="text-lg font-bold">
+                    {{ item.question }}
+                  </h3>
+                </div>
+                <div class="transition-transform duration-300" :class="{'rotate-180': openFaqs[index]}">
+                  <UIcon name="i-heroicons-chevron-down" class="text-xl" />
+                </div>
               </div>
-              <div>
-                <h3 class="text-lg font-bold mb-3"
-                  :class="{
-                    'text-primary-700 dark:text-primary-300': index === 0,
-                    'text-blue-700 dark:text-blue-300': index === 1,
-                    'text-yellow-700 dark:text-yellow-300': index === 2
-                  }">
-                  {{ item.question }}
-                </h3>
-                <p class="text-gray-700 dark:text-gray-300 leading-relaxed">
+              
+              <div 
+                class="overflow-hidden transition-all duration-300"
+                :class="[openFaqs[index] ? 'max-h-96 opacity-100 mt-4' : 'max-h-0 opacity-0']"
+              >
+                <div class="ml-14 text-gray-700 dark:text-gray-300 leading-relaxed">
                   {{ item.answer }}
-                </p>
+                </div>
               </div>
             </div>
           </UCard>
@@ -251,6 +251,11 @@ const faqItems = [
 ];
 
 const currentFact = ref('');
+const openFaqs = ref(faqItems.map(() => false));
+
+const toggleFaq = (index) => {
+  openFaqs.value[index] = !openFaqs.value[index];
+};
 
 const getRandomFact = () => {
   const randomIndex = Math.floor(Math.random() * facts.length);

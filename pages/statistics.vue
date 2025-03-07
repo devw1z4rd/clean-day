@@ -17,7 +17,7 @@
         
         <UCard class="border-t-4 border-t-blue-500">
           <div class="p-5 text-center">
-            <h3 class="text-sm uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Непокуренные сигареты</h3>
+            <h3 class="text-sm uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Не выкурено</h3>
             <div class="text-2xl md:text-3xl font-bold text-blue-600 dark:text-blue-400">
               {{ userStore.cigarettesNotSmoked }}
             </div>
