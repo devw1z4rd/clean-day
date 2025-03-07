@@ -183,6 +183,27 @@ import { useAchievementsStore } from '~/stores/achievements';
 const userStore = useUserStore();
 const achievementsStore = useAchievementsStore();
 
+const cigaretteForms = ['сигарета', 'сигареты', 'сигарет'];
+
+const getWordForm = (number, forms) => {
+  const lastDigit = number % 10;
+  const lastTwoDigits = number % 100;
+  
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+    return forms[2];
+  }
+  
+  if (lastDigit === 1) {
+    return forms[0];
+  }
+  
+  if (lastDigit >= 2 && lastDigit <= 4) {
+    return forms[1];
+  }
+  
+  return forms[2];
+};
+
 const statsData = computed(() => [
   {
     icon: '💰',
@@ -192,7 +213,7 @@ const statsData = computed(() => [
   {
     icon: '🚭',
     title: 'Не выкурено:',
-    value: `${userStore.cigarettesNotSmoked} сигарет`
+    value: `${userStore.cigarettesNotSmoked} ${getWordForm(userStore.cigarettesNotSmoked, cigaretteForms)}`
   },
   {
     icon: '🏆',

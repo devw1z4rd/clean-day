@@ -91,6 +91,28 @@ import { useAchievementsStore } from '~/stores/achievements';
 const userStore = useUserStore();
 const achievementsStore = useAchievementsStore();
 
+const dayForms = ['день', 'дня', 'дней'];
+const cigaretteForms = ['сигарету', 'сигареты', 'сигарет'];
+
+const getWordForm = (number, forms) => {
+  const lastDigit = number % 10;
+  const lastTwoDigits = number % 100;
+  
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+    return forms[2];
+  }
+  
+  if (lastDigit === 1) {
+    return forms[0];
+  }
+  
+  if (lastDigit >= 2 && lastDigit <= 4) {
+    return forms[1];
+  }
+  
+  return forms[2];
+};
+
 const getEmojiForIcon = (iconName) => {
   const iconMap = {
     'mdi-star-circle': '🌟',
@@ -114,7 +136,7 @@ const getEmojiForIcon = (iconName) => {
 
 const getAchievementHint = (achievement) => {
   if (achievement.requiredDays) {
-    return `Не курите ${achievement.requiredDays} дней`;
+    return `Не курите ${achievement.requiredDays} ${getWordForm(achievement.requiredDays, dayForms)}`;
   }
   
   if (achievement.requiredMoney) {
@@ -122,7 +144,7 @@ const getAchievementHint = (achievement) => {
   }
   
   if (achievement.requiredCigarettes) {
-    return `Не выкурите ${achievement.requiredCigarettes} сигарет`;
+    return `Не выкурите ${achievement.requiredCigarettes} ${getWordForm(achievement.requiredCigarettes, cigaretteForms)}`;
   }
   
   return 'Продолжайте не курить';

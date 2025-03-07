@@ -46,7 +46,7 @@
             {{ timeSinceQuit.days }}
           </div>
           <div class="text-sm uppercase font-medium text-gray-500 dark:text-gray-400 mt-1">
-            дней
+            {{ getWordForm(timeSinceQuit.days, dayForms) }}
           </div>
         </div>
 
@@ -95,11 +95,47 @@ const achievementsStore = useAchievementsStore();
 const showResetConfirm = ref(false);
 const timeSinceQuit = ref({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
+const dayForms = ['день', 'дня', 'дней'];
+const hourForms = ['час', 'часа', 'часов'];
+const minuteForms = ['минута', 'минуты', 'минут'];
+const secondForms = ['секунда', 'секунды', 'секунд'];
+
+const getWordForm = (number, forms) => {
+  const lastDigit = number % 10;
+  const lastTwoDigits = number % 100;
+  
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+    return forms[2]; 
+  }
+  
+  if (lastDigit === 1) {
+    return forms[0]; 
+  }
+  
+  if (lastDigit >= 2 && lastDigit <= 4) {
+    return forms[1]; 
+  }
+  
+  return forms[2]; 
+};
+
 const timeUnits = computed(() => [
-  { label: 'Дней', value: timeSinceQuit.value.days },
-  { label: 'Часов', value: timeSinceQuit.value.hours },
-  { label: 'Минут', value: timeSinceQuit.value.minutes },
-  { label: 'Секунд', value: timeSinceQuit.value.seconds }
+  { 
+    label: getWordForm(timeSinceQuit.value.days, dayForms), 
+    value: timeSinceQuit.value.days 
+  },
+  { 
+    label: getWordForm(timeSinceQuit.value.hours, hourForms), 
+    value: timeSinceQuit.value.hours 
+  },
+  { 
+    label: getWordForm(timeSinceQuit.value.minutes, minuteForms), 
+    value: timeSinceQuit.value.minutes 
+  },
+  { 
+    label: getWordForm(timeSinceQuit.value.seconds, secondForms), 
+    value: timeSinceQuit.value.seconds 
+  }
 ]);
 
 const calculateTimeDifference = () => {

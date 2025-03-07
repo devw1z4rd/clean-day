@@ -4,14 +4,16 @@
       Настройки
     </h1>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <UCard :ui="{ ring: '', header: { padding: 'px-6 py-4' }, body: { base: 'p-6' } }"
-        class="border-t-4 border-t-primary-500">
-        <template #header>
-          <h2 class="text-lg font-medium">Информация о курении</h2>
-        </template>
+    <UCard :ui="{ ring: '', header: { padding: 'px-6 py-4' }, body: { base: 'p-6' } }"
+      class="mb-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-md">
+      <template #header>
+        <div class="flex items-center">
+          <h2 class="text-xl font-semibold text-primary-700 dark:text-gray-200">Информация о курении</h2>
+        </div>
+      </template>
 
-        <UFormGroup label="Сколько сигарет в день вы курили:">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <UFormGroup label="Сигарет в день:">
           <UInput v-model.number="smokingSettings.cigarettesPerDay" type="text" pattern="[0-9]*" inputmode="numeric"
             :min="1" :max="100" placeholder="20" @blur="saveSmokingSettings" class="hide-spinners">
             <template #trailing>
@@ -20,7 +22,7 @@
           </UInput>
         </UFormGroup>
 
-        <UFormGroup label="Сколько сигарет в пачке:">
+        <UFormGroup label="Сигарет в пачке:">
           <UInput v-model.number="smokingSettings.cigarettesInPack" type="text" pattern="[0-9]*" inputmode="numeric"
             :min="1" :max="50" placeholder="20" @blur="saveSmokingSettings" class="hide-spinners">
             <template #trailing>
@@ -37,127 +39,167 @@
             </template>
           </UInput>
         </UFormGroup>
-      </UCard>
+      </div>
+      
+      <div class="mt-4 pt-4 border-t border-primary-100 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400">
+        <p class="flex items-center">
+          <UIcon name="i-heroicons-information-circle" class="mr-2" size="sm" />
+          Эти данные используются для расчёта сэкономленных средств и других статистик
+        </p>
+      </div>
+    </UCard>
 
-      <UCard :ui="{ ring: '', header: { padding: 'px-6 py-4' }, body: { base: 'p-6' } }"
-        class="border-t-4 border-t-blue-500">
-        <template #header>
-          <h2 class="text-lg font-medium">Настройки приложения</h2>
-        </template>
-
-        <UFormGroup>
-          <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800">
+    
+    <UTabs
+      :items="[
+        { 
+          icon: 'i-heroicons-cog-6-tooth',
+          label: 'Приложение', 
+          slot: 'app' 
+        },
+        { 
+          icon: 'i-heroicons-calendar',
+          label: 'Отказ от курения', 
+          slot: 'quit' 
+        },
+        { 
+          icon: 'i-heroicons-trash',
+          label: 'Сброс данных', 
+          slot: 'reset' 
+        }
+      ]"
+      class="bg-white dark:bg-gray-900 shadow rounded-lg overflow-hidden"
+    >
+      
+      <template #app>
+        <div class="p-6">
+          <div class="flex justify-between items-center py-4 border-b border-gray-100 dark:border-gray-800">
             <div>
-              <div class="font-medium">Включить уведомления</div>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Получать регулярные напоминания и мотивацию</p>
-            </div>
-            <UToggle v-model="appSettings.notifications" color="primary" />
-          </div>
-        </UFormGroup>
-
-        <UFormGroup>
-          <div class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800">
-            <div>
-              <div class="font-medium">Уведомления о достижениях</div>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Узнавайте о новых разблокированных достижениях</p>
+              <div class="font-medium text-lg">Уведомления о достижениях</div>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Узнавайте о новых разблокированных достижениях</p>
             </div>
             <UToggle v-model="appSettings.achievementNotifications" color="primary" />
           </div>
-        </UFormGroup>
 
-        <UFormGroup>
-          <div class="flex justify-between items-center py-2">
+          <div class="flex justify-between items-center py-4">
             <div>
-              <div class="font-medium">Темная тема</div>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Включить темный режим интерфейса</p>
+              <div class="font-medium text-lg">Темная тема</div>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Включить темный режим интерфейса</p>
             </div>
             <UToggle v-model="appSettings.darkMode" color="primary" />
           </div>
-        </UFormGroup>
-      </UCard>
-
-      <UCard
-        :ui="{ ring: '', header: { padding: 'px-6 py-4' }, footer: { padding: 'px-6 py-4' }, body: { base: 'p-6' } }"
-        class="border-t-4 border-t-green-500">
-        <template #header>
-          <h2 class="text-lg font-medium">Информация об отказе</h2>
-        </template>
-
-        <div v-if="userStore.hasQuit">
-          <UAlert title="Информация"
-            :description="`Вы бросили курить ${userStore.quitDate ? formatDate(userStore.quitDate) : ''}`"
-            color="primary" variant="soft" icon="i-heroicons-information-circle" class="mb-4" />
-
-          <UFormGroup label="Изменить дату отказа:">
-            <UInput v-model="quitDateInput" type="datetime-local" :max="today" icon="i-heroicons-calendar"
-              class="hide-spinners" />
-          </UFormGroup>
         </div>
+      </template>
 
-        <div v-else class="py-6 text-center">
-          <p class="text-lg mb-6 text-gray-700 dark:text-gray-300">
-            Вы еще не установили дату отказа от курения.
-          </p>
-        </div>
+      
+      <template #quit>
+        <div class="p-6">
+          <div v-if="userStore.hasQuit">
+            <div class="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-4 flex items-start mb-6">
+              <UIcon name="i-heroicons-information-circle" class="mr-3 text-primary-600 dark:text-primary-400 mt-1 flex-shrink-0" />
+              <div>
+                <h3 class="font-medium text-primary-700 dark:text-primary-400">Информация</h3>
+                <p class="text-gray-700 dark:text-gray-300 text-sm mt-1">
+                  Вы бросили курить {{ userStore.quitDate ? formatDate(userStore.quitDate) : '' }}
+                </p>
+              </div>
+            </div>
 
-        <template #footer>
-          <div v-if="userStore.hasQuit" class="flex justify-end">
-            <UButton color="primary" @click="updateQuitDate" icon="i-heroicons-check">
-              Обновить дату
-            </UButton>
+            <UFormGroup label="Изменить дату отказа:">
+              <UInput v-model="quitDateInput" type="datetime-local" :max="today" icon="i-heroicons-calendar"
+                class="hide-spinners" />
+            </UFormGroup>
+
+            <div class="flex justify-end mt-4">
+              <UButton color="primary" @click="updateQuitDate" icon="i-heroicons-check">
+                Обновить дату
+              </UButton>
+            </div>
           </div>
-          <div v-else class="flex justify-center">
+
+          <div v-else class="py-6 text-center">
+            <div class="rounded-full h-20 w-20 bg-primary-100 dark:bg-primary-900/40 text-primary-500 dark:text-primary-400 
+                     flex items-center justify-center text-3xl mx-auto mb-4">
+              <UIcon name="i-heroicons-calendar" size="xl" />
+            </div>
+            <p class="text-lg mb-6 text-gray-700 dark:text-gray-300">
+              Вы еще не установили дату отказа от курения.
+            </p>
             <UButton to="/" color="primary" class="px-6">
               Перейти на главную
             </UButton>
           </div>
-        </template>
-      </UCard>
+        </div>
+      </template>
 
-      <UCard
-        :ui="{ ring: '', header: { padding: 'px-6 py-4' }, footer: { padding: 'px-6 py-4' }, body: { base: 'p-6' } }"
-        class="border-t-4 border-t-red-500">
-        <template #header>
-          <h2 class="text-lg font-medium text-red-600 dark:text-red-400">Сброс данных</h2>
-        </template>
+      
+      <template #reset>
+        <div class="p-6">
+          <div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 mb-6">
+            <div class="flex items-start">
+              <UIcon name="i-heroicons-exclamation-triangle" class="mr-3 text-red-600 dark:text-red-400 mt-1 flex-shrink-0" />
+              <div>
+                <h3 class="font-medium text-red-700 dark:text-red-400">Внимание</h3>
+                <p class="text-gray-700 dark:text-gray-300 text-sm mt-2">
+                  Сброс данных удалит всю вашу статистику, включая:
+                </p>
+                <ul class="text-gray-700 dark:text-gray-300 text-sm mt-2 space-y-1 list-disc list-inside">
+                  <li>Дату отказа от курения</li>
+                  <li>Все полученные достижения</li>
+                  <li>Статистику сэкономленных денег</li>
+                  <li>Количество невыкуренных сигарет</li>
+                </ul>
+                <p class="text-gray-700 dark:text-gray-300 text-sm mt-2 font-medium">
+                  Восстановление данных будет невозможно.
+                </p>
+              </div>
+            </div>
+          </div>
 
-        <UAlert title="Внимание"
-          description="Это действие удалит все ваши данные, включая достижения и статистику. Восстановление будет невозможно."
-          color="red" variant="soft" icon="i-heroicons-exclamation-triangle" />
-
-        <template #footer>
-          <div class="flex justify-end">
-            <UButton color="red" @click="showResetConfirm = true" icon="i-heroicons-trash">
+          <div class="flex justify-center">
+            <UButton color="red" @click="showResetConfirm = true" icon="i-heroicons-trash" size="lg">
               Сбросить все данные
             </UButton>
           </div>
-        </template>
-      </UCard>
-    </div>
+        </div>
+      </template>
+    </UTabs>
 
-    <UModal v-model="showResetConfirm">
-      <UCard :ui="{ ring: '', header: { padding: 'px-6 py-4' }, footer: { padding: 'p-4' } }">
+    
+    <UModal v-model="showResetConfirm" :ui="{
+      width: 'sm:max-w-md md:max-w-lg',
+      container: 'flex items-center sm:py-8 justify-center min-h-screen',
+      overlay: { background: 'bg-gray-950/75' },
+      base: 'relative w-full max-h-[90vh] overflow-auto m-4 sm:m-6'
+    }">
+      <UCard :ui="{ 
+        ring: '', 
+        base: 'overflow-hidden',
+        header: { padding: 'p-4 sm:px-6 sm:py-4' }, 
+        body: { base: 'p-4 sm:p-6' },
+        footer: { padding: 'p-4 sm:p-4' } 
+      }">
         <template #header>
           <div class="flex items-center text-red-600">
-            <UIcon name="i-heroicons-exclamation-triangle" class="mr-2" />
-            <span class="text-lg font-semibold">Подтверждение сброса данных</span>
+            <UIcon name="i-heroicons-exclamation-triangle" class="mr-2 text-lg" />
+            <span class="text-base sm:text-lg font-semibold">Подтверждение сброса данных</span>
           </div>
         </template>
 
-        <UAlert title="Подтверждение"
+        <UAlert title="Внимание"
           description="Вы действительно хотите удалить все данные? Это действие нельзя отменить и все ваши достижения будут потеряны."
           color="red" variant="soft" icon="i-heroicons-exclamation-triangle" class="mb-4" />
 
         <UFormGroup label='Введите "УДАЛИТЬ" для подтверждения:'>
-          <UInput v-model="confirmText" placeholder="УДАЛИТЬ" />
+          <UInput v-model="confirmText" placeholder="УДАЛИТЬ" size="lg" class="text-base" />
         </UFormGroup>
 
         <template #footer>
-          <div class="flex gap-3 justify-end">
-            <UButton @click="showResetConfirm = false" color="gray" variant="ghost">
+          <div class="flex flex-col sm:flex-row gap-3 sm:justify-end">
+            <UButton @click="showResetConfirm = false" color="gray" size="lg" class="order-1 sm:order-none sm:block-none w-full sm:w-auto">
               Отмена
             </UButton>
-            <UButton @click="resetAllData" color="red" :disabled="confirmText !== 'УДАЛИТЬ'">
+            <UButton @click="resetAllData" color="red" size="lg" class="w-full sm:w-auto" :disabled="confirmText !== 'УДАЛИТЬ'">
               Да, удалить все
             </UButton>
           </div>
