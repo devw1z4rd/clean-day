@@ -99,7 +99,7 @@ export const useAchievementsStore = defineStore('achievements', {
         if (this.unlockedAchievements.includes(achievement.id)) return;
 
         if ((achievement.requiredDays && days >= achievement.requiredDays) ||
-            (achievement.requiredMoney && money >= achievement.requiredMoney) ||
+            (achievement.requiredMoney && Number(money) >= achievement.requiredMoney) ||
             (achievement.requiredCigarettes && cigarettes >= achievement.requiredCigarettes)) {
           this.unlockAchievement(achievement.id);
           newlyUnlocked = true;

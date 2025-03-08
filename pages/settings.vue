@@ -4,6 +4,8 @@
       Настройки
     </h1>
 
+    <SyncSettings />
+
     <UCard :ui="{ ring: '', header: { padding: 'px-6 py-4' }, body: { base: 'p-6' } }"
       class="mb-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-md">
       <template #header>
@@ -221,10 +223,12 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import { useUserStore } from '~/stores/user';
 import { useAchievementsStore } from '~/stores/achievements';
+import { useSyncStore } from '~/stores/sync';
 
 const toast = useToast();
 const userStore = useUserStore();
 const achievementsStore = useAchievementsStore();
+const syncStore = useSyncStore();
 
 const activeToastsCount = ref(0);
 
@@ -329,6 +333,11 @@ const updateQuitDate = () => {
     if (hasChanged) {
       userStore.setQuitDate(dateValue);
       achievementsStore.checkAchievements();
+      
+      if (syncStore.syncEnabled) {
+        syncStore.pushData();
+      }
+      
       showToast({
         title: 'Успешно',
         description: 'Дата отказа обновлена!',
@@ -361,6 +370,10 @@ const saveSmokingSettings = () => {
   if (hasChanged) {
     userStore.updateSmokingSettings(newSettings);
     achievementsStore.checkAchievements();
+    
+    if (syncStore.syncEnabled) {
+      syncStore.pushData();
+    }
 
     showToast({
       title: 'Успешно',
@@ -384,6 +397,10 @@ const saveAppSettings = () => {
   } else {
     document.documentElement.classList.remove('dark');
   }
+  
+  if (syncStore.syncEnabled) {
+    syncStore.pushData();
+  }
 
   showToast({
     title: 'Успешно',
@@ -398,6 +415,8 @@ const resetAllData = () => {
   if (confirmText.value !== 'УДАЛИТЬ') return;
 
   if (typeof window !== 'undefined') {
+    syncStore.resetSync();
+    
     localStorage.removeItem('clean-day-user');
     localStorage.removeItem('clean-day-achievements');
 
@@ -422,20 +441,19 @@ watch(appSettings, () => {
 
 watch(showResetConfirm, (newValue) => {
   if (newValue) {
-    // Если модальное окно открыто, сбрасываем фокус после короткой задержки
     setTimeout(() => {
-      // Безопасный доступ к DOM-элементу через querySelector
       const inputElement = document.querySelector('.modal-delete-confirm input');
       if (inputElement instanceof HTMLElement) {
         inputElement.blur();
       }
-      // Для надежности устанавливаем фокус на тело документа
       document.body.focus();
     }, 50);
   }
 });
 
 onMounted(() => {
+  syncStore.initialize();
+  
   if (userStore.quitDate) {
     try {
       const date = new Date(userStore.quitDate);

@@ -29,6 +29,8 @@ jobs:
         run: npm run build
         env:
           NUXT_APP_BASE_URL: '/clean-day/'
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_KEY }}
       
       - name: Create .nojekyll file
         run: touch .output/public/.nojekyll
