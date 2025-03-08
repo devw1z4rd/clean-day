@@ -21,17 +21,42 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: 'npm'
       
       - name: Install dependencies
         run: npm ci
+
+      - name: Verify secrets
+        run: |
+          if [ -z "${{ secrets.VITE_SUPABASE_URL }}" ]; then
+            echo "::warning::VITE_SUPABASE_URL is not set in the repository secrets."
+          else
+            echo "VITE_SUPABASE_URL is available." 
+          fi
+          if [ -z "${{ secrets.VITE_SUPABASE_KEY }}" ]; then
+            echo "::warning::VITE_SUPABASE_KEY is not set in the repository secrets."
+          else
+            echo "VITE_SUPABASE_KEY is available."
+          fi
       
       - name: Generate config.js
         run: |
           mkdir -p public
-          echo "window.ENV = {" > public/config.js
-          echo "  SUPABASE_URL: \"${{ secrets.VITE_SUPABASE_URL }}\"," >> public/config.js
-          echo "  SUPABASE_KEY: \"${{ secrets.VITE_SUPABASE_KEY }}\"" >> public/config.js
-          echo "};" >> public/config.js
+          cat > public/config.js << EOL
+          window.ENV = {
+            SUPABASE_URL: "${{ secrets.VITE_SUPABASE_URL }}",
+            SUPABASE_KEY: "${{ secrets.VITE_SUPABASE_KEY }}"
+          };
+          EOL
+          echo "Generated public/config.js"
+          
+      - name: Create .env file
+        run: |
+          cat > .env << EOL
+          VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_KEY=${{ secrets.VITE_SUPABASE_KEY }}
+          EOL
+          echo "Created .env file for build process"
       
       - name: Build
         run: npm run build
@@ -42,10 +67,21 @@ jobs:
       
       - name: Copy config.js to output
         run: |
-          cp public/config.js .output/public/
+          ls -la public/
+          ls -la .output/public/ || true
+          if [ -f "public/config.js" ] && [ -d ".output/public" ]; then
+            cp public/config.js .output/public/
+            echo "Copied config.js to .output/public/"
+          else
+            echo "::error::Could not copy config.js because files or directories don't exist"
+            ls -la
+          fi
           
       - name: Create .nojekyll file
         run: touch .output/public/.nojekyll
+      
+      - name: List output files
+        run: find .output/public -type f | sort | head -n 20
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
