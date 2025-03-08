@@ -25,6 +25,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
+      - name: Generate config.js
+        run: |
+          mkdir -p public
+          echo "window.ENV = {" > public/config.js
+          echo "  SUPABASE_URL: \"${{ secrets.VITE_SUPABASE_URL }}\"," >> public/config.js
+          echo "  SUPABASE_KEY: \"${{ secrets.VITE_SUPABASE_KEY }}\"" >> public/config.js
+          echo "};" >> public/config.js
+      
       - name: Build
         run: npm run build
         env:
@@ -32,6 +40,10 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_KEY }}
       
+      - name: Copy config.js to output
+        run: |
+          cp public/config.js .output/public/
+          
       - name: Create .nojekyll file
         run: touch .output/public/.nojekyll
       

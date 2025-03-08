@@ -10,7 +10,10 @@ export default defineNuxtConfig({
   
   app: {
     baseURL: '/clean-day/',  
-    buildAssetsDir: '/_nuxt/'
+    buildAssetsDir: '/_nuxt/',
+    head: {
+      script: [{ src: '/config.js' }]
+    }
   },
   
   nitro: {
