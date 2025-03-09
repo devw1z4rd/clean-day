@@ -44,21 +44,21 @@
         }">
         <template #header>
           <h2 class="text-xl font-semibold text-primary-700 dark:text-primary-300 text-center">
-            Факт дня
+            {{ userStore.hasUserName ? 'Ваше подбадривание' : 'Факт дня' }}
           </h2>
         </template>
 
         <transition name="fade" mode="out-in">
-          <p :key="currentFact" class="text-lg text-gray-700 dark:text-gray-300 italic text-center">
-            {{ currentFact }}
+          <p :key="currentMessage" class="text-lg text-gray-700 dark:text-gray-300 italic text-center">
+            {{ currentMessage }}
           </p>
         </transition>
 
         <template #footer>
           <div class="flex justify-center">
-            <UButton color="primary" variant="soft" @click="getRandomFact" icon="i-heroicons-arrow-path"
+            <UButton color="primary" variant="soft" @click="getRandomMessage" icon="i-heroicons-arrow-path"
               class="rounded-full">
-              Новый факт
+              {{ userStore.hasUserName ? 'Новое подбадривание' : 'Новый факт' }}
             </UButton>
           </div>
         </template>
@@ -184,6 +184,7 @@ const userStore = useUserStore();
 const achievementsStore = useAchievementsStore();
 
 const cigaretteForms = ['сигарета', 'сигареты', 'сигарет'];
+const currentMessage = ref(''); // Used for both facts and encouragements
 
 const getWordForm = (number, forms) => {
   const lastDigit = number % 10;
@@ -256,6 +257,22 @@ const facts = [
   'Отказ от курения приводит к улучшению настроения и снижению стресса в долгосрочной перспективе.',
 ];
 
+const encouragements = computed(() => {
+  const name = userStore.userName;
+  return [
+    `${name}, вы молодец! Каждый день без сигарет — это победа!`,
+    `${name}, ваша сила воли вдохновляет! Продолжайте в том же духе!`,
+    `Отличная работа, ${name}! Ваше здоровье улучшается с каждым днем.`,
+    `${name}, вы на верном пути к здоровой жизни!`,
+    `Гордимся вами, ${name}! Уже ${userStore.timeSinceQuit.days} дней без курения!`,
+    `${name}, ваше решение бросить курить — одно из лучших в вашей жизни!`,
+    `Не сдавайтесь, ${name}! Вы уже достигли замечательных результатов!`,
+    `${name}, ваши легкие говорят вам спасибо за каждый день без сигарет!`,
+    `Представьте, ${name}, сколько полезного вы можете сделать на сэкономленные ${userStore.moneySaved} EUR!`,
+    `${name}, чем дольше вы не курите, тем проще становится оставаться некурящим!`
+  ];
+});
+
 const faqItems = [
   {
     question: 'Как справиться с тягой к курению?',
@@ -271,16 +288,29 @@ const faqItems = [
   }
 ];
 
-const currentFact = ref('');
 const openFaqs = ref(faqItems.map(() => false));
 
 const toggleFaq = (index) => {
   openFaqs.value[index] = !openFaqs.value[index];
 };
 
-const getRandomFact = () => {
-  const randomIndex = Math.floor(Math.random() * facts.length);
-  currentFact.value = facts[randomIndex];
+// Combined function to get either a fact or encouragement
+const getRandomMessage = () => {
+  if (userStore.hasUserName) {
+    // Get random encouragement
+    const possibleMessages = encouragements.value;
+    let randomMessage;
+    do {
+      const randomIndex = Math.floor(Math.random() * possibleMessages.length);
+      randomMessage = possibleMessages[randomIndex];
+    } while (possibleMessages.length > 1 && randomMessage === currentMessage.value);
+    
+    currentMessage.value = randomMessage;
+  } else {
+    // Get random fact
+    const randomIndex = Math.floor(Math.random() * facts.length);
+    currentMessage.value = facts[randomIndex];
+  }
 };
 
 const isActive = (timeStr) => {
@@ -309,7 +339,7 @@ const isActive = (timeStr) => {
 };
 
 onMounted(() => {
-  getRandomFact();
+  getRandomMessage();
   achievementsStore.initialize();
   achievementsStore.checkAchievements();
 });

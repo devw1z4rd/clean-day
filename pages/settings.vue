@@ -4,8 +4,6 @@
       Настройки
     </h1>
 
-    <SyncSettings />
-
     <UCard :ui="{ ring: '', header: { padding: 'px-6 py-4' }, body: { base: 'p-6' } }"
       class="mb-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-md">
       <template #header>
@@ -43,8 +41,8 @@
           </UInput>
         </UFormGroup>
       </div>
-      
-      <div class="mt-4 pt-4 border-t border-primary-100 dark:border-primary-800/50 text-sm text-gray-600 dark:text-gray-400">
+
+      <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800 text-sm text-gray-600 dark:text-gray-400">
         <p class="flex items-center">
           <UIcon name="i-heroicons-information-circle" class="mr-2" size="sm" />
           Эти данные используются для расчёта сэкономленных средств и других статистик
@@ -52,34 +50,32 @@
       </div>
     </UCard>
 
-    
-    <UTabs
-      :items="[
-        { 
-          icon: 'i-heroicons-cog-6-tooth',
-          label: 'Приложение', 
-          slot: 'app' 
-        },
-        { 
-          icon: 'i-heroicons-calendar',
-          label: 'Отказ от курения', 
-          slot: 'quit' 
-        },
-        { 
-          icon: 'i-heroicons-trash',
-          label: 'Сброс данных', 
-          slot: 'reset' 
-        }
-      ]"
-      class="bg-white dark:bg-gray-900 shadow rounded-lg overflow-hidden"
-    >
-      
+
+    <UTabs :items="[
+      {
+        icon: 'i-heroicons-cog-6-tooth',
+        label: 'Приложение',
+        slot: 'app'
+      },
+      {
+        icon: 'i-heroicons-calendar',
+        label: 'Отказ от курения',
+        slot: 'quit'
+      },
+      {
+        icon: 'i-heroicons-trash',
+        label: 'Сброс данных',
+        slot: 'reset'
+      }
+    ]" class="bg-white dark:bg-gray-900 shadow rounded-lg overflow-hidden">
+
       <template #app>
         <div class="p-6">
           <div class="flex justify-between items-center py-4 border-b border-gray-100 dark:border-gray-800">
             <div>
               <div class="font-medium text-lg">Уведомления о достижениях</div>
-              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Узнавайте о новых разблокированных достижениях</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Узнавайте о новых разблокированных достижениях
+              </p>
             </div>
             <UToggle v-model="appSettings.achievementNotifications" color="primary" />
           </div>
@@ -91,15 +87,29 @@
             </div>
             <UToggle v-model="appSettings.darkMode" color="primary" />
           </div>
+
+          <UFormGroup label="Ваше имя:">
+            <UInput v-model="userNameInput" placeholder="Введите ваше имя" @blur="updateUserName"
+              icon="i-heroicons-user-circle">
+            </UInput>
+          </UFormGroup>
+
+          <div class="pt-4 border-primary-100 dark:border-primary-800/50 text-sm text-gray-600 dark:text-gray-400">
+            <p class="flex items-center">
+              <UIcon name="i-heroicons-information-circle" class="mr-2" size="sm" />
+              Ваше имя будет использоваться для персонализированных сообщений
+            </p>
+          </div>
         </div>
       </template>
 
-      
+
       <template #quit>
         <div class="p-6">
           <div v-if="userStore.hasQuit">
             <div class="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-4 flex items-start mb-6">
-              <UIcon name="i-heroicons-information-circle" class="mr-3 text-primary-600 dark:text-primary-400 mt-1 flex-shrink-0" />
+              <UIcon name="i-heroicons-information-circle"
+                class="mr-3 text-primary-600 dark:text-primary-400 mt-1 flex-shrink-0" />
               <div>
                 <h3 class="font-medium text-primary-700 dark:text-primary-400">Информация</h3>
                 <p class="text-gray-700 dark:text-gray-300 text-sm mt-1">
@@ -135,12 +145,13 @@
         </div>
       </template>
 
-      
+
       <template #reset>
         <div class="p-6">
           <div class="bg-red-50 dark:bg-red-900/20 rounded-lg p-4 mb-6">
             <div class="flex items-start">
-              <UIcon name="i-heroicons-exclamation-triangle" class="mr-3 text-red-600 dark:text-red-400 mt-1 flex-shrink-0" />
+              <UIcon name="i-heroicons-exclamation-triangle"
+                class="mr-3 text-red-600 dark:text-red-400 mt-1 flex-shrink-0" />
               <div>
                 <h3 class="font-medium text-red-700 dark:text-red-400">Внимание</h3>
                 <p class="text-gray-700 dark:text-gray-300 text-sm mt-2">
@@ -168,19 +179,20 @@
       </template>
     </UTabs>
 
-    
+    <SyncSettings />
+
     <UModal v-model="showResetConfirm" :ui="{
       width: 'sm:max-w-md md:max-w-lg',
       container: 'flex items-center sm:py-8 justify-center min-h-screen',
       overlay: { background: 'bg-gray-950/75' },
       base: 'relative w-full max-h-[90vh] overflow-auto m-4 sm:m-6'
     }">
-      <UCard :ui="{ 
-        ring: '', 
+      <UCard :ui="{
+        ring: '',
         base: 'overflow-hidden',
-        header: { padding: 'p-4 sm:px-6 sm:py-4' }, 
+        header: { padding: 'p-4 sm:px-6 sm:py-4' },
         body: { base: 'p-4 sm:p-6' },
-        footer: { padding: 'p-4 sm:p-4' } 
+        footer: { padding: 'p-4 sm:p-4' }
       }">
         <template #header>
           <div class="flex items-center text-red-600">
@@ -194,22 +206,18 @@
           color="red" variant="soft" icon="i-heroicons-exclamation-triangle" class="mb-4" />
 
         <UFormGroup label='Введите "УДАЛИТЬ" для подтверждения:' class="modal-delete-confirm">
-          <UInput 
-            v-model="confirmText" 
-            placeholder="УДАЛИТЬ" 
-            size="lg" 
-            class="text-base" 
-            :autofocus="false"
-            tabindex="-1"
-          />
+          <UInput v-model="confirmText" placeholder="УДАЛИТЬ" size="lg" class="text-base" :autofocus="false"
+            tabindex="-1" />
         </UFormGroup>
 
         <template #footer>
           <div class="flex flex-col sm:flex-row gap-3 sm:justify-end">
-            <UButton @click="showResetConfirm = false" color="gray" size="lg" class="order-1 sm:order-none sm:block-none w-full sm:w-auto">
+            <UButton @click="showResetConfirm = false" color="gray" size="lg"
+              class="order-1 sm:order-none sm:block-none w-full sm:w-auto">
               Отмена
             </UButton>
-            <UButton @click="resetAllData" color="red" size="lg" class="w-full sm:w-auto" :disabled="confirmText !== 'УДАЛИТЬ'">
+            <UButton @click="resetAllData" color="red" size="lg" class="w-full sm:w-auto"
+              :disabled="confirmText !== 'УДАЛИТЬ'">
               Да, удалить все
             </UButton>
           </div>
@@ -232,6 +240,14 @@ const syncStore = useSyncStore();
 
 const activeToastsCount = ref(0);
 
+type ToastOptions = {
+  title?: string;
+  description?: string;
+  icon?: string;
+  color?: 'primary' | 'success' | 'info' | 'warning' | 'danger';
+  timeout?: number;
+};
+
 const smokingSettings = ref({
   cigarettesPerDay: userStore.cigarettesPerDay || 20,
   cigarettesInPack: userStore.cigarettesInPack || 20,
@@ -247,6 +263,7 @@ const appSettings = ref({
 const quitDateInput = ref('');
 const showResetConfirm = ref(false);
 const confirmText = ref('');
+const userNameInput = ref(userStore.userName || '');
 
 const today = computed(() => {
   const now = new Date();
@@ -287,7 +304,7 @@ const formatDateForDisplay = (dateValue: string | Date) => {
   });
 };
 
-const showToast = (options: { title?: string; description?: string; icon?: string; color?: string; timeout?: number }) => {
+const showToast = (options: ToastOptions) => {
   if (activeToastsCount.value >= 2) {
     toast.clear();
     activeToastsCount.value = 0;
@@ -298,9 +315,7 @@ const showToast = (options: { title?: string; description?: string; icon?: strin
   const toastId = toast.add({
     ...options,
     timeout: options.timeout || 1500,
-    onClose: () => {
-      activeToastsCount.value = Math.max(0, activeToastsCount.value - 1);
-    }
+
   });
 
   setTimeout(() => {
@@ -320,7 +335,7 @@ const updateQuitDate = () => {
         title: 'Ошибка',
         description: 'Невозможно установить дату отказа в будущем!',
         icon: 'i-heroicons-exclamation-circle',
-        color: 'red',
+        color: 'danger',
         timeout: 3000
       });
       return;
@@ -333,16 +348,16 @@ const updateQuitDate = () => {
     if (hasChanged) {
       userStore.setQuitDate(dateValue);
       achievementsStore.checkAchievements();
-      
+
       if (syncStore.syncEnabled) {
         syncStore.pushData();
       }
-      
+
       showToast({
         title: 'Успешно',
         description: 'Дата отказа обновлена!',
         icon: 'i-heroicons-check-circle',
-        color: 'green',
+        color: 'success',
         timeout: 1500
       });
     }
@@ -370,7 +385,7 @@ const saveSmokingSettings = () => {
   if (hasChanged) {
     userStore.updateSmokingSettings(newSettings);
     achievementsStore.checkAchievements();
-    
+
     if (syncStore.syncEnabled) {
       syncStore.pushData();
     }
@@ -379,7 +394,7 @@ const saveSmokingSettings = () => {
       title: 'Успешно',
       description: 'Настройки курения сохранены!',
       icon: 'i-heroicons-check-circle',
-      color: 'green',
+      color: 'success',
       timeout: 1500
     });
   }
@@ -397,7 +412,7 @@ const saveAppSettings = () => {
   } else {
     document.documentElement.classList.remove('dark');
   }
-  
+
   if (syncStore.syncEnabled) {
     syncStore.pushData();
   }
@@ -406,9 +421,27 @@ const saveAppSettings = () => {
     title: 'Успешно',
     description: 'Настройки приложения сохранены!',
     icon: 'i-heroicons-check-circle',
-    color: 'green',
+    color: 'success',
     timeout: 1500,
   });
+};
+
+const updateUserName = () => {
+  if (userNameInput.value !== userStore.userName) {
+    userStore.setUserName(userNameInput.value);
+
+    if (syncStore.syncEnabled) {
+      syncStore.pushData();
+    }
+
+    showToast({
+      title: 'Успешно',
+      description: 'Имя сохранено!',
+      icon: 'i-heroicons-check-circle',
+      color: 'success',
+      timeout: 1500
+    });
+  }
 };
 
 const resetAllData = () => {
@@ -416,7 +449,7 @@ const resetAllData = () => {
 
   if (typeof window !== 'undefined') {
     syncStore.resetSync();
-    
+
     localStorage.removeItem('clean-day-user');
     localStorage.removeItem('clean-day-achievements');
 
@@ -425,7 +458,7 @@ const resetAllData = () => {
       title: 'Внимание',
       description: 'Все данные успешно удалены. Перезагрузка...',
       icon: 'i-heroicons-information-circle',
-      color: 'blue',
+      color: 'info',
       timeout: 1500
     });
 
@@ -453,7 +486,7 @@ watch(showResetConfirm, (newValue) => {
 
 onMounted(() => {
   syncStore.initialize();
-  
+
   if (userStore.quitDate) {
     try {
       const date = new Date(userStore.quitDate);
@@ -462,6 +495,8 @@ onMounted(() => {
       console.error('Error setting quit date input:', error);
     }
   }
+
+  userNameInput.value = userStore.userName || '';
 
   if (userStore.darkMode) {
     document.documentElement.classList.add('dark');

@@ -22,6 +22,7 @@ interface AppSettings {
 export const useUserStore = defineStore('user', {
   state: () => ({
     quitDate: null as string | null,
+    userName: '' as string,
     cigarettesPerDay: 20,
     cigarettePrice: 5.5,
     cigarettesInPack: 20,
@@ -63,6 +64,10 @@ export const useUserStore = defineStore('user', {
     hasQuit(): boolean {
       return !!this.quitDate;
     },
+
+    hasUserName(): boolean {
+      return !!this.userName && this.userName.trim() !== '';
+    }
   },
 
   actions: {
@@ -93,6 +98,7 @@ export const useUserStore = defineStore('user', {
       try {
         const stateToSave = {
           quitDate: this.quitDate,
+          userName: this.userName,
           cigarettesPerDay: this.cigarettesPerDay,
           cigarettePrice: this.cigarettePrice,
           cigarettesInPack: this.cigarettesInPack,
@@ -129,5 +135,10 @@ export const useUserStore = defineStore('user', {
       this.darkMode = settings.darkMode;
       this.saveState();
     },
+
+    setUserName(name: string) {
+      this.userName = name;
+      this.saveState();
+    }
   },
 });

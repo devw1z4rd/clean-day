@@ -22,6 +22,7 @@ export const useSyncStore = defineStore("sync", {
     qrCodeDataUrl: "",
     syncEnabled: false,
     autoSyncInterval: null as NodeJS.Timeout | null,
+    syncIntervalMinutes: 10, // 10 minutes   
     error: null as string | null,
     configValid: false,
     diagnostics: null as string | null,
@@ -48,6 +49,34 @@ export const useSyncStore = defineStore("sync", {
     isSessionActive(): boolean {
       return this.sessionId !== "" && this.syncEnabled;
     },
+    
+    syncIntervalInfo(): string {
+      if (this.syncIntervalMinutes < 60) {
+        return `Каждые ${this.syncIntervalMinutes} минут`;
+      } else {
+        const hours = this.syncIntervalMinutes / 60;
+        return `Каждые ${hours} ${hours === 1 ? 'час' : 'часа'}`;
+      }
+    },
+    
+    nextSyncTime(): string {
+      if (!this.syncEnabled || this.lastSync === 0) return "—";
+      
+      const nextSyncTimestamp = this.lastSync + (this.syncIntervalMinutes * 60 * 1000);
+      const now = Date.now();
+      const diffMs = nextSyncTimestamp - now;
+      
+      if (diffMs <= 0) return "В ближайшее время";
+      
+      const minutes = Math.floor(diffMs / 60000);
+      if (minutes < 60) {
+        return `Через ${minutes} мин.`;
+      } else {
+        const hours = Math.floor(minutes / 60);
+        const remainingMinutes = minutes % 60;
+        return `Через ${hours} ч. ${remainingMinutes > 0 ? remainingMinutes + ' мин.' : ''}`;
+      }
+    }
   },
 
   actions: {
@@ -119,6 +148,11 @@ KEY: ${
           this.syncEnabled =
             localStorage.getItem("clean-day-sync-enabled") === "true";
 
+          const savedInterval = localStorage.getItem("clean-day-sync-interval");
+          if (savedInterval) {
+            this.syncIntervalMinutes = parseInt(savedInterval, 10);
+          }
+
           if (this.syncEnabled) {
             await this.fetchData();
             this.startAutoSync();
@@ -186,9 +220,29 @@ KEY: ${
     startAutoSync() {
       if (this.autoSyncInterval) clearInterval(this.autoSyncInterval);
 
+      const intervalMs = this.syncIntervalMinutes * 60 * 1000;
+      
       this.autoSyncInterval = setInterval(() => {
         this.syncData();
-      }, 5 * 60 * 1000);
+      }, intervalMs);
+      
+      localStorage.setItem("clean-day-sync-interval", this.syncIntervalMinutes.toString());
+      
+      if (this.syncEnabled) {
+        this.syncData();
+      }
+    },
+    
+    setSyncInterval(minutes: number) {
+      if (minutes < 1) minutes = 1;
+      
+      this.syncIntervalMinutes = minutes;
+      
+      if (this.syncEnabled) {
+        this.startAutoSync();
+      }
+      
+      localStorage.setItem("clean-day-sync-interval", minutes.toString());
     },
 
     async joinSession(sessionId: string) {
@@ -317,6 +371,7 @@ KEY: ${
         const syncData: SyncData = {
           user: {
             quitDate: userStore.quitDate,
+            userName: userStore.userName, 
             cigarettesPerDay: userStore.cigarettesPerDay,
             cigarettePrice: userStore.cigarettePrice,
             cigarettesInPack: userStore.cigarettesInPack,

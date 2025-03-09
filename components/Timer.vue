@@ -19,6 +19,12 @@
             </div>
           </div>
         </div>
+        
+        <div v-if="showResetButton" class="mt-6">
+          <UButton color="red" variant="soft" @click="showResetConfirm = true" size="sm" icon="i-heroicons-arrow-path">
+            Я сорвался
+          </UButton>
+        </div>
       </div>
 
       <div v-else class="py-10 text-center">
@@ -69,6 +75,12 @@
         <div class="text-xs text-center text-gray-500 dark:text-gray-400 mt-1">
           Прогресс: {{ calculateProgressPercentage() }}%
         </div>
+        
+        <div v-if="showResetButton" class="flex justify-center mt-4">
+          <UButton color="red" variant="soft" @click="showResetConfirm = true" size="sm" icon="i-heroicons-arrow-path" class="w-full">
+            Я сорвался
+          </UButton>
+        </div>
       </div>
 
       <div v-else class="py-8 text-center">
@@ -82,6 +94,30 @@
       </div>
     </div>
   </div>
+  
+  <UModal v-model="showResetConfirm">
+    <UCard :ui="{ ring: '', body: { base: 'p-6' } }">
+      <template #header>
+        <div class="flex items-center">
+          <UIcon name="i-heroicons-exclamation-triangle" class="mr-2 text-red-600" size="sm" />
+          <h3 class="text-lg font-semibold">Сбросить прогресс?</h3>
+        </div>
+      </template>
+
+      <p class="text-gray-700 dark:text-gray-300 mb-4">
+        Вы уверены, что хотите сбросить весь прогресс? Все ваши достижения и статистика будут сохранены, но счетчик времени будет сброшен.
+      </p>
+
+      <div class="flex justify-end gap-2">
+        <UButton color="gray" @click="showResetConfirm = false">
+          Отмена
+        </UButton>
+        <UButton color="red" @click="resetProgress">
+          Сбросить
+        </UButton>
+      </div>
+    </UCard>
+  </UModal>
 </template>
 
 <script setup>
@@ -99,6 +135,15 @@ const dayForms = ['день', 'дня', 'дней'];
 const hourForms = ['час', 'часа', 'часов'];
 const minuteForms = ['минута', 'минуты', 'минут'];
 const secondForms = ['секунда', 'секунды', 'секунд'];
+
+// Computed property to determine if the reset button should be shown
+const showResetButton = computed(() => {
+  if (!userStore.hasQuit) return false;
+  
+  // Show reset button only if the user has been smoke-free for more than 2 hours
+  const totalHours = timeSinceQuit.value.days * 24 + timeSinceQuit.value.hours;
+  return totalHours >= 2;
+});
 
 const getWordForm = (number, forms) => {
   const lastDigit = number % 10;
