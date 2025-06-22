@@ -71,7 +71,7 @@
         footer: { padding: 'px-0 py-0' }
       }">
         <template #header>
-          <h2 class="text-xl font-semibold text-center">
+          <h2 class="text-xl font-semibold text-center text-gray-900 dark:text-gray-100">
             Улучшения здоровья
           </h2>
         </template>
@@ -83,7 +83,7 @@
         ]" class="mb-4">
           <template #all>
             <ul class="space-y-3 pt-4">
-              <li v-for="(item, index) in healthImprovements" :key="index" class="p-3 rounded-md"
+              <li v-for="(item, index) in displayedHealthImprovements" :key="index" class="p-3 rounded-md"
                 :class="isActive(item.time) ? 'bg-primary-50 dark:bg-primary-900/30 border-l-4 border-l-primary-500' : 'bg-gray-50 dark:bg-gray-800/30 border-l-4 border-l-gray-200 dark:border-l-gray-700'">
                 <span class="font-bold mr-2"
                   :class="isActive(item.time) ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'">
@@ -95,6 +95,18 @@
                 </span>
               </li>
             </ul>
+            
+            <div v-if="sortedHealthImprovements.length > 3" class="flex justify-center pt-4">
+              <UButton 
+                @click="showAllHealth = !showAllHealth" 
+                variant="ghost" 
+                color="primary"
+                :icon="showAllHealth ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'"
+                class="text-sm"
+              >
+                {{ showAllHealth ? 'Скрыть' : `Посмотреть ещё ${sortedHealthImprovements.length - 3}` }}
+              </UButton>
+            </div>
           </template>
 
           <template #active>
@@ -128,7 +140,7 @@
       </UCard>
 
       <div class="mb-8">
-        <h2 class="text-xl font-semibold text-center mb-6">
+        <h2 class="text-xl font-semibold text-center mb-6 text-gray-900 dark:text-gray-100">
           Часто задаваемые вопросы
         </h2>
 
@@ -150,12 +162,12 @@
                     }">
                     <UIcon name="i-heroicons-question-mark-circle" class="text-xl" />
                   </div>
-                  <h3 class="text-lg font-bold">
+                  <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">
                     {{ item.question }}
                   </h3>
                 </div>
                 <div class="transition-transform duration-300" :class="{'rotate-180': openFaqs[index]}">
-                  <UIcon name="i-heroicons-chevron-down" class="text-xl" />
+                  <UIcon name="i-heroicons-chevron-down" class="text-xl text-gray-600 dark:text-gray-400" />
                 </div>
               </div>
               
@@ -184,7 +196,8 @@ const userStore = useUserStore();
 const achievementsStore = useAchievementsStore();
 
 const cigaretteForms = ['сигарета', 'сигареты', 'сигарет'];
-const currentMessage = ref(''); // Used for both facts and encouragements
+const currentMessage = ref('');
+const showAllHealth = ref(false); 
 
 const getWordForm = (number, forms) => {
   const lastDigit = number % 10;
@@ -238,6 +251,23 @@ const healthImprovements = [
   { time: '10 лет', description: 'Риск рака легких снижается на 50%.' },
   { time: '15 лет', description: 'Риск сердечно-сосудистых заболеваний становится таким же, как у некурящего.' },
 ];
+
+const sortedHealthImprovements = computed(() => {
+  return [...healthImprovements].sort((a, b) => {
+    const aActive = isActive(a.time);
+    const bActive = isActive(b.time);
+    
+    if (aActive && !bActive) return -1;
+    if (!aActive && bActive) return 1;
+    return 0;
+  });
+});
+
+const displayedHealthImprovements = computed(() => {
+  return showAllHealth.value 
+    ? sortedHealthImprovements.value 
+    : sortedHealthImprovements.value.slice(0, 3);
+});
 
 const facts = [
   'Курение ответственно за более чем 480,000 смертей ежегодно.',
@@ -294,10 +324,8 @@ const toggleFaq = (index) => {
   openFaqs.value[index] = !openFaqs.value[index];
 };
 
-// Combined function to get either a fact or encouragement
 const getRandomMessage = () => {
   if (userStore.hasUserName) {
-    // Get random encouragement
     const possibleMessages = encouragements.value;
     let randomMessage;
     do {
@@ -307,7 +335,6 @@ const getRandomMessage = () => {
     
     currentMessage.value = randomMessage;
   } else {
-    // Get random fact
     const randomIndex = Math.floor(Math.random() * facts.length);
     currentMessage.value = facts[randomIndex];
   }

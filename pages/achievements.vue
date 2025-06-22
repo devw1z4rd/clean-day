@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="text-2xl md:text-3xl font-bold text-center text-primary-600 dark:text-primary-400 mb-8">
+    <h1 class="text-2xl md:text-3xl font-bold text-center text-gray-900 dark:text-gray-100 mb-8">
       Ваши достижения
     </h1>
     

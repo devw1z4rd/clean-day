@@ -14,8 +14,25 @@ export default {
         info: colors.blue,
       },
       fontFamily: {
-        sans: ['Inter', ...defaultTheme.fontFamily.sans],
+        sans: [
+          'Inter', 
+          'system-ui', 
+          '-apple-system', 
+          'BlinkMacSystemFont', 
+          'Segoe UI', 
+          'Roboto', 
+          'Helvetica Neue', 
+          'Arial', 
+          'sans-serif'
+        ],
       },
+      letterSpacing: {
+        tighter: '-0.02em',
+        tight: '-0.01em',
+      },
+      lineHeight: {
+        'relaxed-custom': '1.6',
+      }
     },
   },
   plugins: [],

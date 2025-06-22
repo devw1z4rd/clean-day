@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="text-2xl md:text-3xl font-bold text-center text-primary-600 dark:text-primary-400 mb-8">
+    <h1 class="text-2xl md:text-3xl font-bold text-center text-gray-900 dark:text-gray-100 mb-8">
       Настройки
     </h1>
 
@@ -8,8 +8,8 @@
       class="mb-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-md">
       <template #header>
         <div class="flex items-center">
-          <UIcon name="i-heroicons-fire" class="mr-2 text-primary-600 dark:text-primary-400" size="lg" />
-          <h2 class="text-xl font-semibold text-primary-700 dark:text-primary-400">Информация о курении</h2>
+          <UIcon name="i-heroicons-fire" class="mr-2 text-gray-600 dark:text-gray-100" size="lg" />
+          <h2 class="text-xl font-semibold text-gray-600 dark:text-gray-100">Информация о курении</h2>
         </div>
       </template>
 
@@ -71,34 +71,47 @@
 
       <template #app>
         <div class="p-6">
-          <div class="flex justify-between items-center py-4 border-b border-gray-100 dark:border-gray-800">
+          <!-- <div class="flex justify-between items-center py-4 border-b border-gray-100 dark:border-gray-800">
             <div>
-              <div class="font-medium text-lg">Уведомления о достижениях</div>
+              <div class="font-medium text-lg text-gray-900 dark:text-gray-100">Уведомления о достижениях</div>
               <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Узнавайте о новых разблокированных достижениях
               </p>
             </div>
             <UToggle v-model="appSettings.achievementNotifications" color="primary" />
-          </div>
+          </div> -->
 
-          <div class="flex justify-between items-center py-4">
-            <div>
-              <div class="font-medium text-lg">Темная тема</div>
-              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Включить темный режим интерфейса</p>
+          <div class="space-y-4">
+            <div class="flex justify-between items-center py-4 border-b border-gray-100 dark:border-gray-800">
+              <div class="flex-1 mr-4">
+                <div class="font-medium text-lg text-gray-900 dark:text-gray-100 mb-2">Ваше имя</div>
+                <div class="relative">
+                  <UInput 
+                    v-model="userNameInput" 
+                    placeholder="Введите ваше имя" 
+                    @blur="updateUserName"
+                    icon="i-heroicons-user-circle"
+                    class="pr-10"
+                  />
+                  <div v-if="userNameInput !== userStore.userName" 
+                       class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <UIcon name="i-heroicons-pencil" class="text-orange-500 animate-pulse" size="sm" />
+                  </div>
+                  <div v-else-if="userNameInput && userNameInput === userStore.userName" 
+                       class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <UIcon name="i-heroicons-check-circle" class="text-green-500" size="sm" />
+                  </div>
+                </div>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Используется для персонализированных сообщений</p>
+              </div>
             </div>
-            <UToggle v-model="appSettings.darkMode" color="primary" />
-          </div>
 
-          <UFormGroup label="Ваше имя:">
-            <UInput v-model="userNameInput" placeholder="Введите ваше имя" @blur="updateUserName"
-              icon="i-heroicons-user-circle">
-            </UInput>
-          </UFormGroup>
-
-          <div class="pt-4 border-primary-100 dark:border-primary-800/50 text-sm text-gray-600 dark:text-gray-400">
-            <p class="flex items-center">
-              <UIcon name="i-heroicons-information-circle" class="mr-2" size="sm" />
-              Ваше имя будет использоваться для персонализированных сообщений
-            </p>
+            <div class="flex justify-between items-center py-4">
+              <div>
+                <div class="font-medium text-lg text-gray-900 dark:text-gray-100">Темная тема</div>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Включить темный режим интерфейса</p>
+              </div>
+              <UToggle v-model="appSettings.darkMode" color="primary" />
+            </div>
           </div>
         </div>
       </template>
@@ -179,7 +192,7 @@
       </template>
     </UTabs>
 
-    <SyncSettings />
+    <!-- <SyncSettings /> -->
 
     <UModal v-model="showResetConfirm" :ui="{
       width: 'sm:max-w-md md:max-w-lg',

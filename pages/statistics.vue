@@ -1,154 +1,177 @@
 <template>
   <div>
-    <h1 class="text-2xl md:text-3xl font-bold text-center text-primary-600 dark:text-primary-400 mb-8">
+    <h1 class="text-2xl md:text-3xl font-bold text-center text-white mb-8">
       Ваша статистика
     </h1>
     
     <div v-if="userStore.hasQuit">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <UCard class="border-t-4 border-t-primary-500">
-          <div class="p-5 text-center">
-            <h3 class="text-sm uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Время без курения</h3>
-            <div class="text-2xl md:text-3xl font-bold text-primary-600 dark:text-primary-400">
-              {{ formatTime(userStore.timeSinceQuit) }}
-            </div>
+     
+      <!-- Прогресс здоровья -->
+      <div class="bg-slate-800 border border-slate-700 rounded-lg p-6 mb-6">
+        <h2 class="text-lg font-semibold text-white mb-4">🫁 Восстановление здоровья</h2>
+        
+        <div class="mb-4">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-slate-300">Прогресс восстановления</span>
+            <span class="text-green-400 font-semibold">{{ Math.round(healthProgress) }}%</span>
           </div>
-        </UCard>
-        
-        <UCard class="border-t-4 border-t-blue-500">
-          <div class="p-5 text-center">
-            <h3 class="text-sm uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Не выкурено</h3>
-            <div class="text-2xl md:text-3xl font-bold text-blue-600 dark:text-blue-400">
-              {{ userStore.cigarettesNotSmoked }}
-            </div>
-            <div class="text-sm text-gray-500 dark:text-gray-400 mt-2">
-              Это примерно {{ Math.floor(userStore.cigarettesNotSmoked / userStore.cigarettesInPack) }} пачек
-            </div>
-          </div>
-        </UCard>
-        
-        <UCard class="border-t-4 border-t-yellow-500">
-          <div class="p-5 text-center">
-            <h3 class="text-sm uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Сэкономлено денег</h3>
-            <div class="text-2xl md:text-3xl font-bold text-yellow-600 dark:text-yellow-400">
-              {{ userStore.moneySaved }} EUR
-            </div>
-            <div class="text-sm text-gray-500 dark:text-gray-400 mt-2">
-              На эти деньги можно купить {{ suggestPurchase() }}
-            </div>
-          </div>
-        </UCard>
-        
-        <UCard class="border-t-4 border-t-green-500">
-          <div class="p-5 text-center">
-            <h3 class="text-sm uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">Сохраненное время</h3>
-            <div class="text-2xl md:text-3xl font-bold text-green-600 dark:text-green-400">
-              {{ savedTime }} часов
-            </div>
-            <div class="text-sm text-gray-500 dark:text-gray-400 mt-2">
-              Столько времени вы сэкономили, не выходя на перекуры
-            </div>
-          </div>
-        </UCard>
-      </div>
-      
-      <div class="mb-8">
-        <div class="flex flex-wrap justify-center gap-2 mb-6">
-          <UButton
-            v-for="period in periods"
-            :key="period.value"
-            @click="selectedPeriod = period.value"
-            :color="selectedPeriod === period.value ? 'primary' : 'gray'"
-            :variant="selectedPeriod === period.value ? 'solid' : 'ghost'"
-            size="sm"
-            class="rounded-full"
-          >
-            {{ period.label }}
-          </UButton>
-        </div>
-        
-        <ClientOnly>
-          <ProgressChart 
-            title="Сэкономленные деньги" 
-            type="money" 
-            :days="selectedPeriod" 
-          />
-        </ClientOnly>
-        
-        <ClientOnly>
-          <ProgressChart 
-            title="Непокуренные сигареты" 
-            type="cigarettes" 
-            :days="selectedPeriod" 
-          />
-        </ClientOnly>
-        
-        <ClientOnly>
-          <ProgressChart 
-            title="Улучшение здоровья" 
-            type="health" 
-            :days="selectedPeriod" 
-          />
-        </ClientOnly>
-      </div>
-      
-      <UCard class="mb-8" :ui="{ ring: '', header: { padding: 'px-6 py-4' } }">
-        <template #header>
-          <h2 class="text-xl font-semibold text-primary-600 dark:text-primary-400">
-            Влияние на здоровье
-          </h2>
-        </template>
-        
-        <div class="p-6">
-          <p class="mb-6 text-gray-700 dark:text-gray-300">
-            Отказавшись от курения, вы значительно улучшили свое здоровье. Вот некоторые преимущества, которые вы уже получили:
-          </p>
-          
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <div class="w-full bg-slate-700 rounded-full h-3">
             <div 
-              v-for="(benefit, index) in healthBenefits" 
-              :key="index" 
-              class="p-3 rounded-md"
-              :class="isBenefitActive(benefit.days) ? 'bg-primary-50 dark:bg-primary-900/30 border-l-4 border-l-primary-500' : 'bg-gray-50 dark:bg-gray-800/30 border-l-4 border-l-gray-200 dark:border-l-gray-700'"
-            >
+              class="bg-green-500 h-3 rounded-full transition-all duration-1000 ease-out"
+              :style="{ width: `${healthProgress}%` }"
+            ></div>
+          </div>
+          <div class="text-sm text-slate-400 mt-2">{{ healthStatusText }}</div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div 
+            v-for="(benefit, index) in visibleHealthBenefits" 
+            :key="index"
+            class="p-4 rounded-lg border transition-all duration-300"
+            :class="isBenefitActive(benefit.days) ? 'bg-green-900/30 border-green-500' : 'bg-slate-700/50 border-slate-600'"
+          >
+            <div class="flex items-start">
               <span 
-                class="font-bold mr-2"
-                :class="isBenefitActive(benefit.days) ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'"
+                class="text-lg mr-3 mt-1"
+                :class="isBenefitActive(benefit.days) ? '' : 'grayscale opacity-50'"
               >
-                {{ benefit.days }} дней:
+                {{ isBenefitActive(benefit.days) ? '✅' : '⏳' }}
               </span>
-              <span :class="isBenefitActive(benefit.days) ? 'text-gray-800 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'">
-                {{ benefit.description }}
-              </span>
+              <div>
+                <div 
+                  class="font-semibold mb-1"
+                  :class="isBenefitActive(benefit.days) ? 'text-green-400' : 'text-slate-400'"
+                >
+                  {{ benefit.days }} дней
+                </div>
+                <div 
+                  class="text-sm"
+                  :class="isBenefitActive(benefit.days) ? 'text-slate-200' : 'text-slate-500'"
+                >
+                  {{ benefit.description }}
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </UCard>
+      </div>
+      
+      <!-- Достижения -->
+      <div class="bg-slate-800 border border-slate-700 rounded-lg p-6 mb-6">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold text-white">🏆 Ваши достижения</h2>
+          <div class="text-green-400 font-semibold">
+            Открыто {{ achievedCount }} из {{ achievements.length }} ({{ Math.round((achievedCount / achievements.length) * 100) }}%)
+          </div>
+        </div>
+        
+        <div class="w-full bg-slate-700 rounded-full h-2 mb-6">
+          <div 
+            class="bg-green-500 h-2 rounded-full transition-all duration-1000"
+            :style="{ width: `${(achievedCount / achievements.length) * 100}%` }"
+          ></div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div 
+            v-for="(achievement, index) in achievements" 
+            :key="index"
+            class="p-4 rounded-lg border transition-all duration-300"
+            :class="achievement.achieved ? 'bg-green-900/30 border-green-500' : 'bg-slate-700/50 border-slate-600'"
+          >
+            <div class="flex items-center mb-3">
+              <div 
+                class="w-12 h-12 rounded-lg flex items-center justify-center mr-3 transition-all duration-300"
+                :class="achievement.achieved ? 'bg-green-500' : 'bg-slate-600'"
+              >
+                <span class="text-xl">{{ achievement.icon }}</span>
+              </div>
+              <div>
+                <div class="flex items-center gap-2 mb-1">
+                  <span 
+                    class="font-semibold"
+                    :class="achievement.achieved ? 'text-white' : 'text-slate-400'"
+                  >
+                    {{ achievement.title }}
+                  </span>
+                  <span 
+                    v-if="achievement.achieved"
+                    class="bg-green-500 text-white text-xs px-2 py-1 rounded-full"
+                  >
+                    ПОЛУЧЕНО
+                  </span>
+                </div>
+                <div 
+                  class="text-sm"
+                  :class="achievement.achieved ? 'text-slate-300' : 'text-slate-500'"
+                >
+                  {{ achievement.description }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Следующие цели -->
+      <div class="bg-slate-800 border border-slate-700 rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-white mb-4">🎯 Следующие цели</h2>
+        
+        <div v-if="nextGoals.length > 0" class="space-y-4">
+          <div 
+            v-for="(goal, index) in nextGoals" 
+            :key="index"
+            class="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg border border-slate-600"
+          >
+            <div class="flex items-center">
+              <div class="w-10 h-10 bg-slate-600 rounded-lg flex items-center justify-center mr-3">
+                <span class="text-lg">{{ goal.icon }}</span>
+              </div>
+              <div>
+                <div class="font-semibold text-white">{{ goal.title }}</div>
+                <div class="text-sm text-slate-400">{{ goal.description }}</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-sm text-slate-400">через</div>
+              <div class="font-semibold text-green-400">{{ goal.daysLeft }} дней</div>
+            </div>
+          </div>
+        </div>
+        
+        <div v-else class="text-center py-8">
+          <div class="text-4xl mb-4">🎉</div>
+          <div class="text-lg font-semibold text-white mb-2">Поздравляем!</div>
+          <div class="text-slate-400">Вы достигли всех основных целей!</div>
+        </div>
+      </div>
+      
     </div>
     
     <div v-else>
-      <UCard :ui="{ ring: '', header: { padding: 'p-6' }, body: { base: 'px-6 py-10' }, footer: { padding: 'p-6' } }">
-        <template #header>
-          <h2 class="text-xl font-semibold text-center">Нет данных для отображения</h2>
-        </template>
+      <div class="bg-slate-800 border border-slate-700 rounded-lg p-12 text-center">
+        <div class="w-16 h-16 bg-slate-600 rounded-lg flex items-center justify-center mx-auto mb-6">
+          <span class="text-2xl">📊</span>
+        </div>
         
-        <p class="text-center text-lg text-gray-700 dark:text-gray-300 mb-6">
+        <h2 class="text-xl font-semibold text-white mb-4">
+          Нет данных для отображения
+        </h2>
+        
+        <p class="text-slate-400 mb-6 max-w-md mx-auto">
           Укажите дату отказа от курения на главной странице, чтобы увидеть свою статистику.
         </p>
         
-        <template #footer>
-          <div class="flex justify-center">
-            <UButton
-              to="/"
-              color="primary"
-              size="lg"
-              class="rounded-full px-6"
-            >
-              Перейти на главную
-            </UButton>
-          </div>
-        </template>
-      </UCard>
+        <UButton
+          to="/"
+          color="primary"
+          size="lg"
+          class="rounded-lg px-6"
+        >
+          Перейти на главную
+        </UButton>
+      </div>
     </div>
   </div>
 </template>
@@ -159,68 +182,149 @@ import { useUserStore } from '~/stores/user';
 
 const userStore = useUserStore();
 
-const periods = [
-  { label: '7 дней', value: 7 },
-  { label: '30 дней', value: 30 },
-  { label: '90 дней', value: 90 },
-  { label: '365 дней', value: 365 },
-];
-
-const selectedPeriod = ref(30);
-
-const formatTime = (time) => {
-  const { days, hours, minutes } = time;
-  
-  let result = '';
-  if (days > 0) {
-    result += `${days} дней `;
-  }
-  if (hours > 0 || days > 0) {
-    result += `${hours} часов `;
-  }
-  result += `${minutes} минут`;
-  
-  return result;
-};
-
 const savedTime = computed(() => {
   return Math.floor((userStore.cigarettesNotSmoked * 10) / 60);
+});
+
+const healthProgress = computed(() => {
+  const days = userStore.timeSinceQuit.days;
+  return Math.min((days / 365) * 100, 100);
+});
+
+const healthStatusText = computed(() => {
+  const progress = healthProgress.value;
+  if (progress < 10) return 'Организм начинает восстанавливаться';
+  if (progress < 25) return 'Заметные улучшения в дыхании';
+  if (progress < 50) return 'Значительное восстановление легких';
+  if (progress < 75) return 'Существенное укрепление здоровья';
+  return 'Практически полное восстановление';
+});
+
+const achievements = computed(() => {
+  const days = userStore.timeSinceQuit.days;
+  const money = userStore.moneySaved;
+  const cigarettes = userStore.cigarettesNotSmoked;
+  
+  return [
+    {
+      icon: '🌅',
+      title: 'Первый день',
+      description: 'Продержались целый день без курения',
+      achieved: days >= 1
+    },
+    {
+      icon: '💪',
+      title: 'Сила воли',
+      description: 'Три дня подряд без сигарет',
+      achieved: days >= 3
+    },
+    {
+      icon: '🎯',
+      title: 'Неделя силы',
+      description: 'Целая неделя без курения',
+      achieved: days >= 7
+    },
+    {
+      icon: '💰',
+      title: 'Экономист',
+      description: 'Сэкономили первые €50',
+      achieved: money >= 50
+    },
+    {
+      icon: '🚭',
+      title: 'Отказник',
+      description: 'Не выкурили 100 сигарет',
+      achieved: cigarettes >= 100
+    },
+    {
+      icon: '🏆',
+      title: 'Месяц победы',
+      description: 'Целый месяц без курения',
+      achieved: days >= 30
+    },
+    {
+      icon: '💎',
+      title: 'Чемпион',
+      description: 'Три месяца без курения',
+      achieved: days >= 90
+    },
+    {
+      icon: '👑',
+      title: 'Легенда',
+      description: 'Целый год без курения',
+      achieved: days >= 365
+    }
+  ];
+});
+
+const achievedCount = computed(() => {
+  return achievements.value.filter(a => a.achieved).length;
+});
+
+const nextGoals = computed(() => {
+  const days = userStore.timeSinceQuit.days;
+  
+  const goals = [
+    { days: 1, icon: '🌅', title: 'Первый день', description: 'Продержаться целый день' },
+    { days: 3, icon: '💪', title: 'Три дня силы', description: 'Преодолеть первый барьер' },
+    { days: 7, icon: '🎯', title: 'Неделя без курения', description: 'Важная веха в отказе' },
+    { days: 30, icon: '🏆', title: 'Месяц свободы', description: 'Серьезное достижение' },
+    { days: 90, icon: '💎', title: 'Квартал здоровья', description: 'Кардинальные изменения' },
+    { days: 365, icon: '👑', title: 'Год без сигарет', description: 'Полная трансформация' }
+  ];
+  
+  return goals
+    .filter(goal => days < goal.days)
+    .slice(0, 3)
+    .map(goal => ({
+      ...goal,
+      daysLeft: goal.days - days
+    }));
+});
+
+const visibleHealthBenefits = computed(() => {
+  const allBenefits = [
+    { days: 1, description: 'Уровень кислорода в крови нормализуется' },
+    { days: 2, description: 'Обоняние и вкус улучшаются' },
+    { days: 3, description: 'Уровень угарного газа снижается' },
+    { days: 7, description: 'Дыхание становится легче' },
+    { days: 14, description: 'Кровообращение улучшается' },
+    { days: 30, description: 'Функция легких увеличивается' },
+    { days: 90, description: 'Значительное улучшение здоровья' },
+    { days: 365, description: 'Риск болезней сердца снижается вдвое' }
+  ];
+  
+  const days = userStore.timeSinceQuit.days;
+  
+  // Показываем достигнутые + следующие 2-3 цели
+  const achieved = allBenefits.filter(b => days >= b.days);
+  const upcoming = allBenefits.filter(b => days < b.days).slice(0, 3);
+  
+  return [...achieved.slice(-3), ...upcoming].slice(0, 6);
+});
+
+const motivationalMessage = computed(() => {
+  const days = userStore.timeSinceQuit.days;
+  
+  if (days === 1) return 'Отличная работа! Первый день - самый сложный, и вы справились!';
+  if (days < 7) return 'Продолжайте в том же духе! Каждый день делает вас сильнее.';
+  if (days < 30) return 'Невероятно! Ваше тело уже начинает восстанавливаться.';
+  if (days < 90) return 'Потрясающий результат! Вы на пути к полному восстановлению.';
+  if (days < 365) return 'Выдающееся достижение! Ваше здоровье кардинально улучшилось.';
+  return 'Легендарный результат! Вы полностью изменили свою жизнь к лучшему!';
 });
 
 const suggestPurchase = () => {
   const money = userStore.moneySaved;
   
-  if (money < 500) {
-    return 'хорошую книгу или обед в кафе';
-  } else if (money < 2000) {
-    return 'поход в хороший ресторан или на концерт';
-  } else if (money < 5000) {
-    return 'новую одежду или гаджеты';
-  } else if (money < 15000) {
-    return 'новый смартфон или планшет';
-  } else if (money < 40000) {
-    return 'небольшое путешествие или новую технику';
-  } else if (money < 100000) {
-    return 'хороший отпуск или новый ноутбук';
-  } else {
-    return 'серьезное путешествие или существенную покупку';
-  }
+  if (money < 50) return 'хороший кофе на неделю';
+  if (money < 100) return 'качественную книгу';
+  if (money < 300) return 'поход в ресторан';
+  if (money < 500) return 'новую одежду';
+  if (money < 1000) return 'современный гаджет';
+  if (money < 2000) return 'короткое путешествие';
+  return 'серьезную покупку мечты';
 };
-
-const healthBenefits = [
-  { days: 1, description: 'Уровень кислорода в крови нормализуется, а риск сердечного приступа начинает снижаться.' },
-  { days: 2, description: 'Обоняние и вкусовые ощущения улучшаются, нервные окончания начинают восстанавливаться.' },
-  { days: 3, description: 'Уровень угарного газа в крови снижается до нормального уровня.' },
-  { days: 5, description: 'Большинство никотина выводится из организма.' },
-  { days: 10, description: 'Кашель уменьшается, дыхание становится легче.' },
-  { days: 14, description: 'Функция легких увеличивается, кровообращение улучшается.' },
-  { days: 30, description: 'Уменьшается одышка и повышается общая энергичность.' },
-  { days: 60, description: 'Риск сердечно-сосудистых заболеваний начинает значительно снижаться.' },
-  { days: 90, description: 'Функция легких значительно улучшается, повышается сопротивляемость инфекциям.' },
-  { days: 180, description: 'Уровень стресса снижается, улучшается внешний вид кожи.' },
-  { days: 270, description: 'Здоровье легких продолжает улучшаться, снижается риск респираторных инфекций.' },
-  { days: 365, description: 'Риск сердечно-сосудистых заболеваний снижается наполовину относительно курильщика.' },
-];
 
 const isBenefitActive = (requiredDays) => {
   return userStore.timeSinceQuit.days >= requiredDays;

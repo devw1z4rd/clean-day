@@ -2,7 +2,7 @@
   <div class="hidden md:block">
     <UCard class="mb-8 bg-white dark:bg-gray-900 shadow-lg rounded-xl p-6">
       <template #header>
-        <h2 class="text-2xl font-bold text-primary-600 dark:text-primary-400 text-center uppercase tracking-wide">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 text-center uppercase tracking-wide">
           Время без курения
         </h2>
       </template>
@@ -42,7 +42,7 @@
   <div class="block md:hidden">
     <div
       class="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-xl p-5 mb-4">
-      <h2 class="text-xl font-bold text-primary-700 dark:text-primary-300 text-center mb-3">
+      <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 text-center mb-3">
         Время без курения
       </h2>
 
