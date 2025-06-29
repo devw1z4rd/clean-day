@@ -159,7 +159,47 @@
 
       <template #sync>
         <div class="p-6">
-          <div v-if="!syncStore.isSessionActive && syncStore.configValid">
+          <div v-if="!syncStore.configValid">
+            <UAlert 
+              title="API синхронизации недоступен"
+              :description="syncStore.error || 'Сервер синхронизации не настроен или недоступен'"
+              color="orange" 
+              variant="soft" 
+              icon="i-heroicons-exclamation-triangle" 
+              class="mb-4" 
+            />
+            
+            <p class="mb-4 text-gray-700 dark:text-gray-300 text-sm">
+              Синхронизация между устройствами временно недоступна. Ваши данные сохраняются локально и доступны на этом устройстве.
+            </p>
+
+            <details class="mb-4">
+              <summary class="cursor-pointer text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                <UIcon name="i-heroicons-information-circle" class="inline mr-1" size="sm" />
+                Показать техническую информацию
+              </summary>
+              <div class="mt-2 p-3 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+                <pre class="whitespace-pre-wrap text-gray-600 dark:text-gray-400">{{ syncStore.diagnostics || 'Диагностика недоступна' }}</pre>
+              </div>
+            </details>
+
+            <div class="text-center py-4">
+              <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                Синхронизация будет доступна после настройки сервера API
+              </p>
+              <UButton 
+                color="gray" 
+                variant="soft" 
+                @click="checkConnection" 
+                icon="i-heroicons-arrow-path"
+                :loading="isChecking"
+              >
+                Проверить снова
+              </UButton>
+            </div>
+          </div>
+
+          <div v-else-if="!syncStore.isSessionActive && syncStore.configValid">
             <div class="text-center py-6">
               <div class="rounded-full h-20 w-20 bg-primary-100 dark:bg-primary-900/40 text-primary-500 dark:text-primary-400 
                        flex items-center justify-center text-3xl mx-auto mb-4">
@@ -274,23 +314,6 @@
               </div>
             </div>
           </div>
-
-          <div v-else class="text-center py-6">
-            <UIcon name="i-heroicons-exclamation-triangle" class="mx-auto mb-4 text-red-500" size="xl" />
-            <h3 class="text-lg font-semibold text-red-600 dark:text-red-400 mb-2">
-              Проблема с подключением к API
-            </h3>
-            <p class="text-gray-600 dark:text-gray-400 mb-4">
-              {{ syncStore.error || 'Не удается подключиться к серверу синхронизации' }}
-            </p>
-            
-            <details v-if="syncStore.diagnostics" class="mb-4">
-              <summary class="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
-                Показать диагностику
-              </summary>
-              <pre class="mt-2 p-3 bg-gray-100 dark:bg-gray-800 rounded text-xs text-left overflow-auto">{{ syncStore.diagnostics }}</pre>
-            </details>
-          </div>
         </div>
       </template>
 
@@ -326,6 +349,7 @@
         </div>
       </template>
     </UTabs>
+
     <UModal v-model="showResetConfirm" :ui="{
       width: 'sm:max-w-md md:max-w-lg',
       container: 'flex items-center sm:py-8 justify-center min-h-screen',
@@ -511,6 +535,7 @@ const isCameraActive = ref(false);
 const isDeleting = ref(false);
 const isRefreshingQR = ref(false);
 const qrCodeKey = ref(0);
+const isChecking = ref(false);
 let scanner: any = null;
 
 const today = computed(() => {
@@ -702,6 +727,12 @@ const resetAllData = () => {
       window.location.reload();
     }, 1500);
   }
+};
+
+const checkConnection = async () => {
+  isChecking.value = true;
+  await syncStore.diagnoseConnection();
+  isChecking.value = false;
 };
 
 const enableSync = async () => {

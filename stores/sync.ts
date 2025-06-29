@@ -4,7 +4,7 @@ import { useAchievementsStore } from "./achievements";
 import { v4 as uuidv4 } from "uuid";
 import QRCode from "qrcode";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const API_BASE_URL = import.meta.env.VITE_SYNC_API_URL;
 const API_KEY = import.meta.env.VITE_SYNC_API_KEY; 
 
 interface SyncData {
@@ -53,6 +53,7 @@ export const useSyncStore = defineStore("sync", {
 
   getters: {
     syncStatus(): string {
+      if (!this.configValid) return "API недоступен";
       if (!this.syncEnabled) return "Отключена";
       if (this.isSyncing) return "Синхронизация...";
 
@@ -70,17 +71,30 @@ export const useSyncStore = defineStore("sync", {
     },
 
     isSessionActive(): boolean {
-      return this.sessionId !== "" && this.syncEnabled;
+      return this.sessionId !== "" && this.syncEnabled && this.configValid;
     },
   },
 
   actions: {
+    // Проверяем наличие конфигурации API
+    checkApiConfig(): boolean {
+      if (!API_BASE_URL || API_BASE_URL === 'undefined') {
+        this.configValid = false;
+        this.error = "API URL не настроен. Синхронизация недоступна.";
+        this.diagnostics = `API URL: ${API_BASE_URL || 'не задан'}
+API KEY: ${API_KEY ? 'задан' : 'не задан'}
+Статус: Переменные окружения не настроены для production`;
+        return false;
+      }
+      return true;
+    },
+
     getApiHeaders(): Record<string, string> {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
       
-      if (API_KEY) {
+      if (API_KEY && API_KEY !== 'undefined') {
         headers['Authorization'] = `Bearer ${API_KEY}`;
       }
       
@@ -88,6 +102,11 @@ export const useSyncStore = defineStore("sync", {
     },
 
     async diagnoseConnection(): Promise<boolean> {
+      // Сначала проверяем конфигурацию
+      if (!this.checkApiConfig()) {
+        return false;
+      }
+
       try {
         this.diagnostics = `Проверка подключения к API...
 URL: ${API_BASE_URL}
@@ -145,6 +164,13 @@ KEY: ${API_KEY ? "задан" : "не задан"}`;
       if (this.isInitialized || typeof window === "undefined") return;
 
       try {
+        // Проверяем конфигурацию API
+        if (!this.checkApiConfig()) {
+          this.isInitialized = true;
+          console.warn('Sync API not configured, sync features disabled');
+          return;
+        }
+
         await this.diagnoseConnection();
 
         if (!this.configValid) {
@@ -175,11 +201,12 @@ KEY: ${API_KEY ? "задан" : "не задан"}`;
       } catch (error) {
         console.error("Ошибка инициализации синхронизации:", error);
         this.error = "Ошибка инициализации синхронизации";
+        this.isInitialized = true;
       }
     },
 
     async generateQRCode(): Promise<void> {
-      if (!this.sessionId) return;
+      if (!this.sessionId || !this.configValid) return;
 
       try {
         const appUrl = window.location.origin + window.location.pathname;
@@ -200,6 +227,11 @@ KEY: ${API_KEY ? "задан" : "не задан"}`;
     },
 
     async enableSync(): Promise<void> {
+      if (!this.checkApiConfig()) {
+        this.error = "Синхронизация недоступна: API не настроен";
+        return;
+      }
+
       if (!this.configValid) {
         await this.diagnoseConnection();
         if (!this.configValid) {
@@ -226,6 +258,8 @@ KEY: ${API_KEY ? "задан" : "не задан"}`;
     },
 
     startAutoSync(): void {
+      if (!this.configValid) return;
+      
       if (this.autoSyncInterval) clearInterval(this.autoSyncInterval);
 
       const intervalMs = this.syncIntervalMinutes * 60 * 1000;
@@ -242,6 +276,11 @@ KEY: ${API_KEY ? "задан" : "не задан"}`;
     },
 
     async joinSession(sessionId: string): Promise<boolean> {
+      if (!this.checkApiConfig()) {
+        this.error = "Подключение к сессии недоступно: API не настроен";
+        return false;
+      }
+
       if (!this.configValid) {
         await this.diagnoseConnection();
         if (!this.configValid) {
@@ -299,7 +338,7 @@ KEY: ${API_KEY ? "задан" : "не задан"}`;
     },
 
     async syncData(): Promise<void> {
-      if (!this.syncEnabled || !this.sessionId || this.isSyncing) return;
+      if (!this.syncEnabled || !this.sessionId || this.isSyncing || !this.configValid) return;
 
       this.isSyncing = true;
       this.error = null;
@@ -317,7 +356,7 @@ KEY: ${API_KEY ? "задан" : "не задан"}`;
     },
 
     async fetchData(): Promise<void> {
-      if (!this.syncEnabled || !this.sessionId) return;
+      if (!this.syncEnabled || !this.sessionId || !this.configValid) return;
 
       try {
         console.log('Fetching data for session:', this.sessionId);
@@ -403,7 +442,7 @@ KEY: ${API_KEY ? "задан" : "не задан"}`;
     },
 
     async pushData(): Promise<void> {
-      if (!this.syncEnabled || !this.sessionId) return;
+      if (!this.syncEnabled || !this.sessionId || !this.configValid) return;
 
       try {
         const syncData = this.getCurrentSyncData();
@@ -492,7 +531,7 @@ KEY: ${API_KEY ? "задан" : "не задан"}`;
     },
 
     async deleteSession(): Promise<void> {
-      if (!this.sessionId) return;
+      if (!this.sessionId || !this.configValid) return;
 
       try {
         const response = await fetch(`${API_BASE_URL}/sync/${this.sessionId}`, {
