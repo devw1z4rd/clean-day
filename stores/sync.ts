@@ -4,7 +4,7 @@ import { useAchievementsStore } from "./achievements";
 import { v4 as uuidv4 } from "uuid";
 import QRCode from "qrcode";
 
-const API_BASE_URL = import.meta.env.VITE_SYNC_API_URL;
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 const API_KEY = import.meta.env.VITE_SYNC_API_KEY; 
 
 interface SyncData {
