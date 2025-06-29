@@ -16,7 +16,7 @@ interface SmokingSettings {
 interface AppSettings {
   notifications: boolean;
   achievementNotifications: boolean;
-  darkMode: boolean;
+  theme: string; // 'dark', 'light', or 'system'
 }
 
 export const useUserStore = defineStore('user', {
@@ -28,11 +28,20 @@ export const useUserStore = defineStore('user', {
     cigarettesInPack: 20,
     notifications: true,
     achievementNotifications: true,
-    darkMode: true,
+    theme: 'system' as string, 
     initialized: false,
   }),
 
   getters: {
+    darkMode(): boolean {
+      if (this.theme === 'dark') return true;
+      if (this.theme === 'light') return false;
+      if (typeof window !== 'undefined') {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches;
+      }
+      return false;
+    },
+
     timeElapsed: (state): number => {
       if (!state.quitDate) return 0;
       const now = typeof window !== 'undefined' ? Date.now() : new Date().getTime();
@@ -81,6 +90,12 @@ export const useUserStore = defineStore('user', {
         const savedState = localStorage.getItem('clean-day-user');
         if (savedState) {
           const parsedState = JSON.parse(savedState);
+          
+          if (parsedState.darkMode !== undefined && parsedState.theme === undefined) {
+            parsedState.theme = parsedState.darkMode ? 'dark' : 'light';
+            delete parsedState.darkMode;
+          }
+          
           this.$patch(parsedState);
         }
         this.initialized = true;
@@ -104,7 +119,7 @@ export const useUserStore = defineStore('user', {
           cigarettesInPack: this.cigarettesInPack,
           notifications: this.notifications,
           achievementNotifications: this.achievementNotifications,
-          darkMode: this.darkMode,
+          theme: this.theme, 
         };
         localStorage.setItem('clean-day-user', JSON.stringify(stateToSave));
       } catch (error) {
@@ -132,7 +147,7 @@ export const useUserStore = defineStore('user', {
     updateAppSettings(settings: AppSettings) {
       this.notifications = settings.notifications;
       this.achievementNotifications = settings.achievementNotifications;
-      this.darkMode = settings.darkMode;
+      this.theme = settings.theme; 
       this.saveState();
     },
 

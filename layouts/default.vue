@@ -71,6 +71,21 @@ const mobileMenuOpen = ref(false);
 const typingTextElement = ref(null);
 const isTyping = ref(false);
 
+const applyTheme = (theme) => {
+  if (theme === 'dark') {
+    document.documentElement.classList.add('dark');
+  } else if (theme === 'light') {
+    document.documentElement.classList.remove('dark');
+  } else if (theme === 'system') {
+    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (systemDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }
+};
+
 const toggleMobileMenu = () => {
     mobileMenuOpen.value = !mobileMenuOpen.value;
     
@@ -145,6 +160,9 @@ const setupTypingInterval = () => {
 
 onMounted(() => {
     userStore.initialize();
+    
+    applyTheme(userStore.theme || 'system');
+    
     setupTypingInterval();
 });
 </script>

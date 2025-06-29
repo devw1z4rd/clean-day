@@ -107,10 +107,15 @@
 
             <div class="flex justify-between items-center py-4">
               <div>
-                <div class="font-medium text-lg text-gray-900 dark:text-gray-100">Темная тема</div>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Включить темный режим интерфейса</p>
+                <div class="font-medium text-lg text-gray-900 dark:text-gray-100">Тема</div>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Выберите тему интерфейса</p>
               </div>
-              <UToggle v-model="appSettings.darkMode" color="primary" />
+              <USelect 
+                v-model="appSettings.theme" 
+                :options="themeOptions"
+                size="md"
+                class="w-40"
+              />
             </div>
           </div>
         </div>
@@ -267,10 +272,16 @@ const smokingSettings = ref({
   cigarettePrice: userStore.cigarettePrice || 10,
 });
 
+const themeOptions = [
+  { label: 'Светлая', value: 'light' },
+  { label: 'Темная', value: 'dark' },
+  { label: 'Системная', value: 'system' }
+];
+
 const appSettings = ref({
   notifications: userStore.notifications || false,
   achievementNotifications: userStore.achievementNotifications || false,
-  darkMode: userStore.darkMode || false,
+  theme: userStore.theme || 'system',
 });
 
 const quitDateInput = ref('');
@@ -413,18 +424,29 @@ const saveSmokingSettings = () => {
   }
 };
 
+const applyTheme = (theme: string) => {
+  if (theme === 'dark') {
+    document.documentElement.classList.add('dark');
+  } else if (theme === 'light') {
+    document.documentElement.classList.remove('dark');
+  } else if (theme === 'system') {
+    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (systemDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }
+};
+
 const saveAppSettings = () => {
   userStore.updateAppSettings({
     notifications: appSettings.value.notifications,
     achievementNotifications: appSettings.value.achievementNotifications,
-    darkMode: appSettings.value.darkMode,
+    theme: appSettings.value.theme,
   });
 
-  if (appSettings.value.darkMode) {
-    document.documentElement.classList.add('dark');
-  } else {
-    document.documentElement.classList.remove('dark');
-  }
+  applyTheme(appSettings.value.theme);
 
   if (syncStore.syncEnabled) {
     syncStore.pushData();
@@ -511,8 +533,18 @@ onMounted(() => {
 
   userNameInput.value = userStore.userName || '';
 
-  if (userStore.darkMode) {
-    document.documentElement.classList.add('dark');
+  applyTheme(userStore.theme || 'system');
+
+  if (typeof window !== 'undefined') {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      if (appSettings.value.theme === 'system') {
+        if (e.matches) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }
+    });
   }
 
   if (typeof window !== 'undefined' && typeof document !== 'undefined') {
