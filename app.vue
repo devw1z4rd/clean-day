@@ -7,6 +7,7 @@
 <script setup>
 import { onMounted, nextTick } from 'vue';
 import { useUserStore } from '~/stores/user';
+import { useSyncStore } from '~/stores/sync';
 
 const applyTheme = (theme) => {
   if (theme === 'dark') {
@@ -28,7 +29,13 @@ onMounted(async () => {
     await nextTick();
     try {
       const userStore = useUserStore();
+      const syncStore = useSyncStore();
+      
       userStore.initialize();
+      
+      await syncStore.initialize();
+      
+      await syncStore.processUrlParams();
       
       applyTheme(userStore.theme || 'system');
       
@@ -42,7 +49,7 @@ onMounted(async () => {
         }
       });
     } catch (error) {
-      console.error('Error initializing user store in app.vue:', error);
+      console.error('Error initializing stores in app.vue:', error);
     }
   }
 });

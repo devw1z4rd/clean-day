@@ -257,34 +257,68 @@
               <div class="text-center">
                 <h4 class="font-medium text-gray-900 dark:text-gray-100 mb-3">QR-код для синхронизации</h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  Отсканируйте этот QR-код на другом устройстве
+                  Отсканируйте этот QR-код на другом устройстве или скопируйте данные вручную
                 </p>
 
                 <Transition name="qr-fade" mode="out-in">
                   <div v-if="syncStore.qrCodeDataUrl" :key="qrCodeKey"
                     :class="{ 'qr-container': true, 'animate-refresh': isRefreshingQR }"
-                    class="bg-white p-3 rounded-lg inline-block shadow-md">
+                    class="bg-white p-3 rounded-lg inline-block shadow-md mb-4">
                     <img :src="syncStore.qrCodeDataUrl" alt="QR код для синхронизации" class="mx-auto" />
                   </div>
                   <div v-else
-                    class="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg inline-block w-64 h-64 flex items-center justify-center">
+                    class="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg inline-block w-64 h-64 flex items-center justify-center mb-4">
                     <UButton color="primary" @click="refreshQrCode" icon="i-heroicons-qr-code">
                       Сгенерировать QR-код
                     </UButton>
                   </div>
                 </Transition>
 
-                <div class="flex items-center justify-center mt-4 gap-4">
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-3 mb-4">
                   <div class="text-center">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">ID сессии</div>
-                    <p class="text-xs text-gray-600 dark:text-gray-300 font-mono">{{ syncStore.sessionId.slice(0, 8) }}...</p>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">ID сессии</div>
+                    <div class="flex items-center justify-center gap-2">
+                      <code class="text-xs text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
+                        {{ syncStore.sessionId.slice(0, 8) }}...{{ syncStore.sessionId.slice(-4) }}
+                      </code>
+                      <UButton 
+                        size="2xs" 
+                        color="gray" 
+                        variant="ghost" 
+                        icon="i-heroicons-clipboard-document"
+                        @click="copySessionId"
+                        :class="{ 'text-green-600': sessionIdCopied }"
+                      >
+                        {{ sessionIdCopied ? 'Скопировано' : 'Копировать' }}
+                      </UButton>
+                    </div>
                   </div>
-                  <UButton color="gray" size="sm"
-                    :icon="isRefreshingQR ? 'i-heroicons-arrow-path animate-spin' : 'i-heroicons-arrow-path'"
-                    @click="refreshQrCode" :disabled="isRefreshingQR">
-                    Обновить
-                  </UButton>
+                  
+                  <div class="text-center">
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">Ссылка для синхронизации</div>
+                    <div class="flex items-center justify-center gap-2">
+                      <code class="text-xs text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded max-w-48 truncate">
+                        {{ syncStore.syncUrl }}
+                      </code>
+                      <UButton 
+                        size="2xs" 
+                        color="blue" 
+                        variant="ghost" 
+                        icon="i-heroicons-link"
+                        @click="copySyncUrl"
+                        :class="{ 'text-green-600': syncUrlCopied }"
+                      >
+                        {{ syncUrlCopied ? 'Скопировано' : 'Копировать' }}
+                      </UButton>
+                    </div>
+                  </div>
                 </div>
+
+                <UButton color="gray" size="sm"
+                  :icon="isRefreshingQR ? 'i-heroicons-arrow-path animate-spin' : 'i-heroicons-arrow-path'"
+                  @click="refreshQrCode" :disabled="isRefreshingQR">
+                  Обновить QR-код
+                </UButton>
               </div>
 
               <div class="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-800">
@@ -536,6 +570,8 @@ const isDeleting = ref(false);
 const isRefreshingQR = ref(false);
 const qrCodeKey = ref(0);
 const isChecking = ref(false);
+const sessionIdCopied = ref(false);
+const syncUrlCopied = ref(false);
 let scanner: any = null;
 
 const today = computed(() => {
@@ -574,6 +610,66 @@ const showToast = (options: ToastOptions) => {
   }, options.timeout || 1500);
 
   return toastId;
+};
+
+const copySessionId = async () => {
+  const success = await syncStore.copySessionId();
+  
+  if (success) {
+    sessionIdCopied.value = true;
+    showToast({
+      title: 'ID сессии скопирован',
+      description: 'ID сессии скопирован в буфер обмена',
+      icon: 'i-heroicons-clipboard-document',
+      color: 'success',
+      timeout: 2000
+    });
+    
+    setTimeout(() => {
+      sessionIdCopied.value = false;
+    }, 2000);
+  } else {
+    showToast({
+      title: 'Ошибка копирования',
+      description: 'Не удалось скопировать ID сессии',
+      icon: 'i-heroicons-exclamation-triangle',
+      color: 'danger',
+      timeout: 3000
+    });
+  }
+};
+
+const copySyncUrl = async () => {
+  const success = await syncStore.copySyncUrl();
+  
+  if (success) {
+    syncUrlCopied.value = true;
+    showToast({
+      title: 'Ссылка скопирована',
+      description: 'Ссылка для синхронизации скопирована в буфер обмена',
+      icon: 'i-heroicons-link',
+      color: 'success',
+      timeout: 2000
+    });
+    
+    setTimeout(() => {
+      syncUrlCopied.value = false;
+    }, 2000);
+  } else {
+    showToast({
+      title: 'Ошибка копирования',
+      description: 'Не удалось скопировать ссылку',
+      icon: 'i-heroicons-exclamation-triangle',
+      color: 'danger',
+      timeout: 3000
+    });
+  }
+};
+
+const checkConnection = async () => {
+  isChecking.value = true;
+  await syncStore.diagnoseConnection();
+  isChecking.value = false;
 };
 
 const updateQuitDate = () => {
@@ -727,12 +823,6 @@ const resetAllData = () => {
       window.location.reload();
     }, 1500);
   }
-};
-
-const checkConnection = async () => {
-  isChecking.value = true;
-  await syncStore.diagnoseConnection();
-  isChecking.value = false;
 };
 
 const enableSync = async () => {

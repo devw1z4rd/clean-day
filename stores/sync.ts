@@ -73,10 +73,24 @@ export const useSyncStore = defineStore("sync", {
     isSessionActive(): boolean {
       return this.sessionId !== "" && this.syncEnabled && this.configValid;
     },
+
+    syncUrl(): string {
+      if (!this.sessionId) return "";
+      
+      if (typeof window !== "undefined") {
+        const currentUrl = window.location.href;
+        const baseUrl = currentUrl.split('?')[0].split('#')[0];
+        const url = new URL(baseUrl);
+        url.searchParams.set('session', this.sessionId);
+        
+        return url.toString();
+      }
+      
+      return "";
+    },
   },
 
   actions: {
-    // Проверяем наличие конфигурации API
     checkApiConfig(): boolean {
       if (!API_BASE_URL || API_BASE_URL === 'undefined') {
         this.configValid = false;
@@ -209,8 +223,13 @@ KEY: ${API_KEY ? "задан" : "не задан"}`;
       if (!this.sessionId || !this.configValid) return;
 
       try {
-        const appUrl = window.location.origin + window.location.pathname;
-        const syncUrl = `${appUrl}?session=${this.sessionId}`;
+        const syncUrl = this.syncUrl;
+        if (!syncUrl) {
+          console.error("Не удалось сгенерировать URL для QR-кода");
+          return;
+        }
+
+        console.log('Generating QR code for URL:', syncUrl);
 
         this.qrCodeDataUrl = await QRCode.toDataURL(syncUrl, {
           width: 300,
@@ -223,6 +242,61 @@ KEY: ${API_KEY ? "задан" : "не задан"}`;
       } catch (error) {
         console.error("Ошибка при генерации QR-кода:", error);
         this.error = "Ошибка при генерации QR-кода";
+      }
+    },
+
+    async copySessionId(): Promise<boolean> {
+      if (!this.sessionId) return false;
+
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(this.sessionId);
+          return true;
+        } else {
+          const textArea = document.createElement('textarea');
+          textArea.value = this.sessionId;
+          textArea.style.position = 'fixed';
+          textArea.style.left = '-999999px';
+          textArea.style.top = '-999999px';
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          
+          const result = document.execCommand('copy');
+          document.body.removeChild(textArea);
+          return result;
+        }
+      } catch (error) {
+        console.error('Ошибка при копировании:', error);
+        return false;
+      }
+    },
+
+    async copySyncUrl(): Promise<boolean> {
+      const url = this.syncUrl;
+      if (!url) return false;
+
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(url);
+          return true;
+        } else {
+          const textArea = document.createElement('textarea');
+          textArea.value = url;
+          textArea.style.position = 'fixed';
+          textArea.style.left = '-999999px';
+          textArea.style.top = '-999999px';
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          
+          const result = document.execCommand('copy');
+          document.body.removeChild(textArea);
+          return result;
+        }
+      } catch (error) {
+        console.error('Ошибка при копировании URL:', error);
+        return false;
       }
     },
 
@@ -330,10 +404,20 @@ KEY: ${API_KEY ? "задан" : "не задан"}`;
       const urlParams = new URLSearchParams(window.location.search);
       const sessionParam = urlParams.get("session");
 
-      if (sessionParam) {
+      if (sessionParam && sessionParam !== this.sessionId) {
+        console.log('Processing URL param session:', sessionParam);
+        
         const newUrl = window.location.pathname;
         window.history.replaceState({}, document.title, newUrl);
-        await this.joinSession(sessionParam);
+        
+        const success = await this.joinSession(sessionParam);
+        
+        if (success) {
+          console.log('Successfully joined session from URL');
+          await this.generateQRCode();
+        } else {
+          console.error('Failed to join session from URL');
+        }
       }
     },
 
