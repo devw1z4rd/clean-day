@@ -50,7 +50,6 @@
       </div>
     </UCard>
 
-
     <UTabs :items="[
       {
         icon: 'i-heroicons-cog-6-tooth',
@@ -63,6 +62,11 @@
         slot: 'quit'
       },
       {
+        icon: 'i-heroicons-cloud',
+        label: 'Синхронизация',
+        slot: 'sync'
+      },
+      {
         icon: 'i-heroicons-trash',
         label: 'Сброс данных',
         slot: 'reset'
@@ -71,15 +75,6 @@
 
       <template #app>
         <div class="p-6">
-          <!-- <div class="flex justify-between items-center py-4 border-b border-gray-100 dark:border-gray-800">
-            <div>
-              <div class="font-medium text-lg text-gray-900 dark:text-gray-100">Уведомления о достижениях</div>
-              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Узнавайте о новых разблокированных достижениях
-              </p>
-            </div>
-            <UToggle v-model="appSettings.achievementNotifications" color="primary" />
-          </div> -->
-
           <div class="space-y-4">
             <div class="flex justify-between items-center py-4 border-b border-gray-100 dark:border-gray-800">
               <div class="flex-1 mr-4">
@@ -120,7 +115,6 @@
           </div>
         </div>
       </template>
-
 
       <template #quit>
         <div class="p-6">
@@ -163,6 +157,142 @@
         </div>
       </template>
 
+      <template #sync>
+        <div class="p-6">
+          <div v-if="!syncStore.isSessionActive && syncStore.configValid">
+            <div class="text-center py-6">
+              <div class="rounded-full h-20 w-20 bg-primary-100 dark:bg-primary-900/40 text-primary-500 dark:text-primary-400 
+                       flex items-center justify-center text-3xl mx-auto mb-4">
+                <UIcon name="i-heroicons-cloud" size="xl" />
+              </div>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                Синхронизация между устройствами
+              </h3>
+              <p class="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                Включите синхронизацию, чтобы использовать данные о вашем прогрессе на разных устройствах.
+              </p>
+              <UButton color="primary" size="lg" @click="enableSync" icon="i-heroicons-cloud-arrow-up">
+                Включить синхронизацию
+              </UButton>
+            </div>
+
+            <div class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-800">
+              <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                Подключиться к существующей сессии
+              </h4>
+              <p class="text-gray-600 dark:text-gray-400 mb-4">
+                Подключитесь к существующей сессии, введя ID сессии или отсканировав QR-код с другого устройства.
+              </p>
+
+              <UFormGroup label="ID сессии:">
+                <UInput v-model="sessionInput" placeholder="Введите ID сессии" />
+              </UFormGroup>
+
+              <div class="flex justify-between mt-4">
+                <UButton color="gray" @click="showScannerModal = true" icon="i-heroicons-camera">
+                  Сканировать QR-код
+                </UButton>
+                <UButton color="blue" :disabled="!sessionInput" @click="joinSession" icon="i-heroicons-link">
+                  Подключиться
+                </UButton>
+              </div>
+            </div>
+          </div>
+
+          <div v-else-if="syncStore.configValid">
+            <div class="space-y-6">
+              <div class="flex justify-between items-center py-4 border-b border-gray-100 dark:border-gray-800">
+                <div>
+                  <div class="font-medium text-lg text-gray-900 dark:text-gray-100">Статус синхронизации</div>
+                  <p class="text-sm" :class="syncStore.error ? 'text-red-500' : 'text-gray-500 dark:text-gray-400'">
+                    {{ syncStore.error || syncStore.syncStatus }}
+                  </p>
+                </div>
+                <UButton color="primary" size="sm" icon="i-heroicons-arrow-path" :loading="syncStore.isSyncing"
+                  @click="syncStore.syncData()">
+                  Синхронизировать
+                </UButton>
+              </div>
+
+              <div class="text-center">
+                <h4 class="font-medium text-gray-900 dark:text-gray-100 mb-3">QR-код для синхронизации</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Отсканируйте этот QR-код на другом устройстве
+                </p>
+
+                <Transition name="qr-fade" mode="out-in">
+                  <div v-if="syncStore.qrCodeDataUrl" :key="qrCodeKey"
+                    :class="{ 'qr-container': true, 'animate-refresh': isRefreshingQR }"
+                    class="bg-white p-3 rounded-lg inline-block shadow-md">
+                    <img :src="syncStore.qrCodeDataUrl" alt="QR код для синхронизации" class="mx-auto" />
+                  </div>
+                  <div v-else
+                    class="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg inline-block w-64 h-64 flex items-center justify-center">
+                    <UButton color="primary" @click="refreshQrCode" icon="i-heroicons-qr-code">
+                      Сгенерировать QR-код
+                    </UButton>
+                  </div>
+                </Transition>
+
+                <div class="flex items-center justify-center mt-4 gap-4">
+                  <div class="text-center">
+                    <div class="text-xs text-gray-500 dark:text-gray-400">ID сессии</div>
+                    <p class="text-xs text-gray-600 dark:text-gray-300 font-mono">{{ syncStore.sessionId.slice(0, 8) }}...</p>
+                  </div>
+                  <UButton color="gray" size="sm"
+                    :icon="isRefreshingQR ? 'i-heroicons-arrow-path animate-spin' : 'i-heroicons-arrow-path'"
+                    @click="refreshQrCode" :disabled="isRefreshingQR">
+                    Обновить
+                  </UButton>
+                </div>
+              </div>
+
+              <div class="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+                <div class="flex justify-between items-center">
+                  <div>
+                    <div class="font-medium text-orange-600 dark:text-orange-400">Отключить синхронизацию</div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                      Локальные данные сохранятся, но связь между устройствами будет разорвана
+                    </p>
+                  </div>
+                  <UButton color="orange" variant="soft" size="sm" @click="showDisableConfirm = true" icon="i-heroicons-no-symbol">
+                    Отключить
+                  </UButton>
+                </div>
+                
+                <div class="flex justify-between items-center pt-4 border-t border-gray-100 dark:border-gray-800">
+                  <div>
+                    <div class="font-medium text-red-600 dark:text-red-400">Удалить сессию с сервера</div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                      Полностью удалить сессию с сервера. Другие устройства потеряют доступ к данным
+                    </p>
+                  </div>
+                  <UButton color="red" size="sm" @click="showDeleteConfirm = true" icon="i-heroicons-trash">
+                    Удалить навсегда
+                  </UButton>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-else class="text-center py-6">
+            <UIcon name="i-heroicons-exclamation-triangle" class="mx-auto mb-4 text-red-500" size="xl" />
+            <h3 class="text-lg font-semibold text-red-600 dark:text-red-400 mb-2">
+              Проблема с подключением к API
+            </h3>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">
+              {{ syncStore.error || 'Не удается подключиться к серверу синхронизации' }}
+            </p>
+            
+            <details v-if="syncStore.diagnostics" class="mb-4">
+              <summary class="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
+                Показать диагностику
+              </summary>
+              <pre class="mt-2 p-3 bg-gray-100 dark:bg-gray-800 rounded text-xs text-left overflow-auto">{{ syncStore.diagnostics }}</pre>
+            </details>
+          </div>
+        </div>
+      </template>
 
       <template #reset>
         <div class="p-6">
@@ -196,9 +326,6 @@
         </div>
       </template>
     </UTabs>
-
-    <!-- <SyncSettings /> -->
-
     <UModal v-model="showResetConfirm" :ui="{
       width: 'sm:max-w-md md:max-w-lg',
       container: 'flex items-center sm:py-8 justify-center min-h-screen',
@@ -242,11 +369,98 @@
         </template>
       </UCard>
     </UModal>
+
+    <UModal v-model="showDisableConfirm">
+      <UCard :ui="{ ring: '', body: { base: 'p-6' } }">
+        <template #header>
+          <div class="flex items-center">
+            <UIcon name="i-heroicons-exclamation-triangle" class="mr-2 text-orange-600" size="sm" />
+            <h3 class="text-lg font-semibold">Отключить синхронизацию?</h3>
+          </div>
+        </template>
+
+        <p class="text-gray-700 dark:text-gray-300 mb-4">
+          Вы уверены, что хотите отключить синхронизацию? Данные на этом устройстве сохранятся, но связь с другими
+          устройствами будет разорвана. Сессия останется на сервере.
+        </p>
+
+        <div class="flex justify-end gap-2">
+          <UButton color="gray" @click="showDisableConfirm = false">
+            Отмена
+          </UButton>
+          <UButton color="orange" @click="disableSync">
+            Отключить
+          </UButton>
+        </div>
+      </UCard>
+    </UModal>
+
+    <UModal v-model="showDeleteConfirm">
+      <UCard :ui="{ ring: '', body: { base: 'p-6' } }">
+        <template #header>
+          <div class="flex items-center">
+            <UIcon name="i-heroicons-trash" class="mr-2 text-red-600" size="sm" />
+            <h3 class="text-lg font-semibold">Удалить сессию с сервера?</h3>
+          </div>
+        </template>
+
+        <p class="text-gray-700 dark:text-gray-300 mb-4">
+          Вы уверены, что хотите <strong>полностью удалить</strong> сессию с сервера? Все подключенные устройства 
+          потеряют доступ к синхронизированным данным. Это действие нельзя отменить.
+        </p>
+
+        <div class="flex justify-end gap-2">
+          <UButton color="gray" @click="showDeleteConfirm = false">
+            Отмена
+          </UButton>
+          <UButton color="red" @click="deleteSession" :loading="isDeleting">
+            Удалить навсегда
+          </UButton>
+        </div>
+      </UCard>
+    </UModal>
+
+    <UModal v-if="showScannerModal" v-model="showScannerModal">
+      <UCard :ui="{ ring: '', body: { base: 'p-6' } }">
+        <template #header>
+          <div class="flex items-center">
+            <UIcon name="i-heroicons-camera" class="mr-2 text-blue-600" size="sm" />
+            <h3 class="text-lg font-semibold">Сканировать QR-код</h3>
+          </div>
+        </template>
+
+        <div class="text-center">
+          <div v-if="isCameraActive" class="relative mx-auto w-full max-w-sm h-64 bg-gray-200 dark:bg-gray-800 mb-4">
+            <div id="qr-scanner-container" class="w-full h-full"></div>
+            <div class="absolute inset-0 border-2 border-blue-500 border-dashed pointer-events-none"></div>
+          </div>
+          <div v-else
+            class="mx-auto w-full max-w-sm h-64 bg-gray-200 dark:bg-gray-800 flex items-center justify-center mb-4">
+            <UButton color="primary" @click="startScanner" icon="i-heroicons-camera">
+              Включить камеру
+            </UButton>
+          </div>
+
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Наведите камеру на QR-код для синхронизации с другим устройством
+          </p>
+        </div>
+
+        <div class="flex justify-between">
+          <UButton color="gray" @click="closeScanner">
+            Отмена
+          </UButton>
+          <UButton color="blue" @click="manualInput">
+            Ввести вручную
+          </UButton>
+        </div>
+      </UCard>
+    </UModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useUserStore } from '~/stores/user';
 import { useAchievementsStore } from '~/stores/achievements';
 import { useSyncStore } from '~/stores/sync';
@@ -289,6 +503,16 @@ const showResetConfirm = ref(false);
 const confirmText = ref('');
 const userNameInput = ref(userStore.userName || '');
 
+const sessionInput = ref('');
+const showDisableConfirm = ref(false);
+const showDeleteConfirm = ref(false);
+const showScannerModal = ref(false);
+const isCameraActive = ref(false);
+const isDeleting = ref(false);
+const isRefreshingQR = ref(false);
+const qrCodeKey = ref(0);
+let scanner: any = null;
+
 const today = computed(() => {
   const now = new Date();
   return now.toISOString().slice(0, 16);
@@ -307,27 +531,6 @@ const formatDate = (dateString: string) => {
   });
 };
 
-const formatDateForDisplay = (dateValue: string | Date) => {
-  if (!dateValue) return '';
-
-  let date;
-  if (typeof dateValue === 'string') {
-    date = new Date(dateValue);
-  } else {
-    date = dateValue;
-  }
-
-  if (isNaN(date.getTime())) return '';
-
-  return date.toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-};
-
 const showToast = (options: ToastOptions) => {
   if (activeToastsCount.value >= 2) {
     toast.clear();
@@ -339,7 +542,6 @@ const showToast = (options: ToastOptions) => {
   const toastId = toast.add({
     ...options,
     timeout: options.timeout || 1500,
-
   });
 
   setTimeout(() => {
@@ -366,7 +568,6 @@ const updateQuitDate = () => {
     }
 
     const dateValue = selectedDate.toISOString();
-
     const hasChanged = userStore.quitDate !== dateValue;
 
     if (hasChanged) {
@@ -503,6 +704,184 @@ const resetAllData = () => {
   }
 };
 
+const enableSync = async () => {
+  await syncStore.enableSync();
+
+  if (syncStore.error) {
+    showToast({
+      title: 'Ошибка синхронизации',
+      description: syncStore.error,
+      icon: 'i-heroicons-exclamation-triangle',
+      color: 'danger',
+      timeout: 5000
+    });
+    return;
+  }
+
+  showToast({
+    title: 'Синхронизация включена',
+    description: 'Теперь вы можете синхронизировать данные между устройствами',
+    icon: 'i-heroicons-check-circle',
+    color: 'success',
+    timeout: 3000
+  });
+};
+
+const refreshQrCode = async () => {
+  if (isRefreshingQR.value) return;
+
+  isRefreshingQR.value = true;
+
+  try {
+    await syncStore.generateQRCode();
+    qrCodeKey.value++; 
+
+    setTimeout(() => {
+      isRefreshingQR.value = false;
+    }, 1000);
+  } catch (error) {
+    console.error('Ошибка при обновлении QR-кода:', error);
+    isRefreshingQR.value = false;
+  }
+};
+
+const disableSync = () => {
+  syncStore.disableSync();
+  showDisableConfirm.value = false;
+
+  showToast({
+    title: 'Синхронизация отключена',
+    description: 'Сессия остается на сервере, но синхронизация на этом устройстве отключена',
+    icon: 'i-heroicons-information-circle',
+    color: 'info',
+    timeout: 3000
+  });
+};
+
+const deleteSession = async () => {
+  isDeleting.value = true;
+  
+  try {
+    await syncStore.deleteSession();
+    showDeleteConfirm.value = false;
+
+    showToast({
+      title: 'Сессия удалена',
+      description: 'Сессия полностью удалена с сервера',
+      icon: 'i-heroicons-check-circle',
+      color: 'success',
+      timeout: 3000
+    });
+  } catch (error) {
+    showToast({
+      title: 'Ошибка удаления',
+      description: syncStore.error || 'Не удалось удалить сессию с сервера',
+      icon: 'i-heroicons-exclamation-triangle',
+      color: 'danger',
+      timeout: 3000
+    });
+  } finally {
+    isDeleting.value = false;
+  }
+};
+
+const joinSession = async () => {
+  if (!sessionInput.value) return;
+
+  const success = await syncStore.joinSession(sessionInput.value);
+
+  if (success) {
+    showToast({
+      title: 'Подключено успешно',
+      description: 'Ваши данные синхронизированы',
+      icon: 'i-heroicons-check-circle',
+      color: 'success',
+      timeout: 3000
+    });
+    sessionInput.value = '';
+  } else {
+    showToast({
+      title: 'Ошибка подключения',
+      description: syncStore.error || 'Не удалось подключиться к сессии',
+      icon: 'i-heroicons-exclamation-triangle',
+      color: 'danger',
+      timeout: 3000
+    });
+  }
+};
+
+const startScanner = async () => {
+  try {
+    const { default: QrScanner } = await import('qr-scanner');
+
+    const videoElement = document.createElement('video');
+    videoElement.style.width = '100%';
+    videoElement.style.height = '100%';
+
+    const container = document.getElementById('qr-scanner-container');
+    if (container) {
+      container.innerHTML = '';
+      container.appendChild(videoElement);
+
+      scanner = new QrScanner(
+        videoElement,
+        (result: any) => {
+          handleScanResult(result.data);
+          closeScanner();
+        },
+        {
+          highlightScanRegion: true,
+          highlightCodeOutline: true,
+        }
+      );
+
+      await scanner.start();
+      isCameraActive.value = true;
+    }
+  } catch (error) {
+    console.error('Ошибка при запуске сканера:', error);
+    showToast({
+      title: 'Ошибка камеры',
+      description: 'Не удалось получить доступ к камере',
+      icon: 'i-heroicons-exclamation-triangle',
+      color: 'danger',
+      timeout: 3000
+    });
+  }
+};
+
+const closeScanner = () => {
+  if (scanner) {
+    scanner.stop();
+    scanner.destroy();
+    scanner = null;
+  }
+  isCameraActive.value = false;
+  showScannerModal.value = false;
+};
+
+const handleScanResult = (data: string) => {
+  try {
+    const url = new URL(data);
+    const sessionId = url.searchParams.get('session');
+
+    if (sessionId) {
+      sessionInput.value = sessionId;
+      joinSession();
+    } else {
+      sessionInput.value = data;
+      joinSession();
+    }
+  } catch (error) {
+    sessionInput.value = data;
+    joinSession();
+  }
+};
+
+const manualInput = () => {
+  closeScanner();
+};
+
 watch(appSettings, () => {
   saveAppSettings();
 }, { deep: true });
@@ -519,8 +898,18 @@ watch(showResetConfirm, (newValue) => {
   }
 });
 
-onMounted(() => {
-  syncStore.initialize();
+onMounted(async () => {
+  await syncStore.initialize();
+
+  if (syncStore.error && !syncStore.configValid) {
+    await syncStore.diagnoseConnection();
+  }
+
+  await syncStore.processUrlParams();
+
+  if (syncStore.isSessionActive && !syncStore.qrCodeDataUrl) {
+    await syncStore.generateQRCode();
+  }
 
   if (userStore.quitDate) {
     try {
@@ -532,7 +921,6 @@ onMounted(() => {
   }
 
   userNameInput.value = userStore.userName || '';
-
   applyTheme(userStore.theme || 'system');
 
   if (typeof window !== 'undefined') {
@@ -558,8 +946,44 @@ onMounted(() => {
     .hide-spinners {
       -moz-appearance: textfield;
     }
+    .qr-container {
+      transition: all 0.3s ease;
+    }
+    .animate-refresh {
+      animation: pulse 1s ease;
+    }
+    .qr-fade-enter-active,
+    .qr-fade-leave-active {
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .qr-fade-enter-from,
+    .qr-fade-leave-to {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(0.97);
+        opacity: 0.8;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
     `;
     document.head.appendChild(styles);
+  }
+});
+
+onUnmounted(() => {
+  if (scanner) {
+    scanner.stop();
+    scanner.destroy();
   }
 });
 </script>

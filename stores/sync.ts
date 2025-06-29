@@ -4,28 +4,51 @@ import { useAchievementsStore } from "./achievements";
 import { v4 as uuidv4 } from "uuid";
 import QRCode from "qrcode";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_KEY;
+const API_BASE_URL = import.meta.env.VITE_SYNC_API_URL;
+const API_KEY = import.meta.env.VITE_SYNC_API_KEY; 
 
 interface SyncData {
-  user: any;
-  achievements: any;
+  id: string; 
+  quitDate: string;
+  userName: string;
+  cigarettesPerDay: number;
+  cigarettePrice: number;
+  cigarettesInPack: number;
+  notifications: boolean;
+  achievementNotifications: boolean;
+  theme: string;
+  achievements: string;
   lastUpdated: number;
+  createdAt: number;
+}
+
+interface SyncState {
+  sessionId: string;
+  isInitialized: boolean;
+  lastSync: number;
+  isSyncing: boolean;
+  qrCodeDataUrl: string;
+  syncEnabled: boolean;
+  autoSyncInterval: NodeJS.Timeout | null;
+  syncIntervalMinutes: number;
+  error: string | null;
+  configValid: boolean;
+  diagnostics: string | null;
 }
 
 export const useSyncStore = defineStore("sync", {
-  state: () => ({
+  state: (): SyncState => ({
     sessionId: "",
     isInitialized: false,
     lastSync: 0,
     isSyncing: false,
     qrCodeDataUrl: "",
     syncEnabled: false,
-    autoSyncInterval: null as NodeJS.Timeout | null,
-    syncIntervalMinutes: 10, // 10 minutes
-    error: null as string | null,
+    autoSyncInterval: null,
+    syncIntervalMinutes: 10,
+    error: null,
     configValid: false,
-    diagnostics: null as string | null,
+    diagnostics: null,
   }),
 
   getters: {
@@ -49,92 +72,76 @@ export const useSyncStore = defineStore("sync", {
     isSessionActive(): boolean {
       return this.sessionId !== "" && this.syncEnabled;
     },
-
-    syncIntervalInfo(): string {
-      if (this.syncIntervalMinutes < 60) {
-        return `Каждые ${this.syncIntervalMinutes} минут`;
-      } else {
-        const hours = this.syncIntervalMinutes / 60;
-        return `Каждые ${hours} ${hours === 1 ? "час" : "часа"}`;
-      }
-    },
-
-    nextSyncTime(): string {
-      if (!this.syncEnabled || this.lastSync === 0) return "—";
-
-      const nextSyncTimestamp =
-        this.lastSync + this.syncIntervalMinutes * 60 * 1000;
-      const now = Date.now();
-      const diffMs = nextSyncTimestamp - now;
-
-      if (diffMs <= 0) return "В ближайшее время";
-
-      const minutes = Math.floor(diffMs / 60000);
-      if (minutes < 60) {
-        return `Через ${minutes} мин.`;
-      } else {
-        const hours = Math.floor(minutes / 60);
-        const remainingMinutes = minutes % 60;
-        return `Через ${hours} ч. ${
-          remainingMinutes > 0 ? remainingMinutes + " мин." : ""
-        }`;
-      }
-    },
   },
 
   actions: {
-    async diagnoseConnection() {
+    getApiHeaders(): Record<string, string> {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (API_KEY) {
+        headers['Authorization'] = `Bearer ${API_KEY}`;
+      }
+      
+      return headers;
+    },
+
+    async diagnoseConnection(): Promise<boolean> {
       try {
-        this.diagnostics = `Проверка подключения к Supabase...
-URL: ${SUPABASE_URL ? SUPABASE_URL.substring(0, 15) + "..." : "не задан"}
-KEY: ${
-          SUPABASE_KEY
-            ? "задан (длина: " + SUPABASE_KEY.length + ")"
-            : "не задан"
-        }`;
+        this.diagnostics = `Проверка подключения к API...
+URL: ${API_BASE_URL}
+KEY: ${API_KEY ? "задан" : "не задан"}`;
 
-        if (!SUPABASE_URL || !SUPABASE_KEY) {
-          this.configValid = false;
-          this.error =
-            "Не заданы переменные окружения VITE_SUPABASE_URL или VITE_SUPABASE_KEY";
-          return false;
-        }
+        console.log('Diagnosing connection to:', API_BASE_URL);
 
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/sessions?limit=1`,
-          {
-            headers: {
-              apikey: SUPABASE_KEY,
-              Authorization: `Bearer ${SUPABASE_KEY}`,
-            },
-          }
-        );
+        const response = await fetch(`${API_BASE_URL}/sync`, {
+          method: 'GET',
+          headers: this.getApiHeaders(),
+        });
+
+        console.log('Diagnosis response:', {
+          status: response.status,
+          statusText: response.statusText,
+          url: response.url,
+          headers: Object.fromEntries(response.headers.entries())
+        });
 
         if (!response.ok) {
           const errorText = await response.text();
+          console.error('Diagnosis failed:', errorText);
+          
           this.configValid = false;
-          this.error = `Ошибка подключения к Supabase: ${response.status} ${response.statusText}`;
+          this.error = `Ошибка подключения к API: ${response.status} ${response.statusText}`;
           this.diagnostics += `\nОтвет API: ${errorText}`;
+          this.diagnostics += `\nПолный URL: ${response.url}`;
+          this.diagnostics += `\nЗаголовки запроса: ${JSON.stringify(this.getApiHeaders(), null, 2)}`;
           return false;
         }
 
+        const data = await response.json();
+        console.log('API connection successful, sample data:', data);
+
         this.configValid = true;
         this.error = null;
-        this.diagnostics = "Подключение к Supabase успешно установлено";
+        this.diagnostics = `Подключение к API успешно установлено
+Количество записей: ${Array.isArray(data) ? data.length : 'unknown'}
+Тип ответа: ${Array.isArray(data) ? 'array' : typeof data}`;
         return true;
       } catch (error) {
+        console.error('Connection diagnosis error:', error);
+        
         this.configValid = false;
-        this.error = `Ошибка при проверке подключения: ${
-          (error as Error).message
-        }`;
+        this.error = `Ошибка при проверке подключения: ${(error as Error).message}`;
         if (error instanceof Error) {
           this.diagnostics += `\nИсключение: ${error.message}`;
+          this.diagnostics += `\nStack trace: ${error.stack}`;
         }
         return false;
       }
     },
 
-    async initialize() {
+    async initialize(): Promise<void> {
       if (this.isInitialized || typeof window === "undefined") return;
 
       try {
@@ -148,8 +155,7 @@ KEY: ${
         const savedSessionId = localStorage.getItem("clean-day-session-id");
         if (savedSessionId) {
           this.sessionId = savedSessionId;
-          this.syncEnabled =
-            localStorage.getItem("clean-day-sync-enabled") === "true";
+          this.syncEnabled = localStorage.getItem("clean-day-sync-enabled") === "true";
 
           const savedInterval = localStorage.getItem("clean-day-sync-interval");
           if (savedInterval) {
@@ -172,7 +178,7 @@ KEY: ${
       }
     },
 
-    async generateQRCode() {
+    async generateQRCode(): Promise<void> {
       if (!this.sessionId) return;
 
       try {
@@ -193,12 +199,11 @@ KEY: ${
       }
     },
 
-    async enableSync() {
+    async enableSync(): Promise<void> {
       if (!this.configValid) {
         await this.diagnoseConnection();
         if (!this.configValid) {
-          this.error =
-            "Невозможно включить синхронизацию: проблема с подключением к базе данных";
+          this.error = "Невозможно включить синхронизацию: проблема с подключением к API";
           return;
         }
       }
@@ -210,7 +215,7 @@ KEY: ${
       this.startAutoSync();
     },
 
-    disableSync() {
+    disableSync(): void {
       this.syncEnabled = false;
       localStorage.setItem("clean-day-sync-enabled", "false");
 
@@ -220,7 +225,7 @@ KEY: ${
       }
     },
 
-    startAutoSync() {
+    startAutoSync(): void {
       if (this.autoSyncInterval) clearInterval(this.autoSyncInterval);
 
       const intervalMs = this.syncIntervalMinutes * 60 * 1000;
@@ -229,54 +234,39 @@ KEY: ${
         this.syncData();
       }, intervalMs);
 
-      localStorage.setItem(
-        "clean-day-sync-interval",
-        this.syncIntervalMinutes.toString()
-      );
+      localStorage.setItem("clean-day-sync-interval", this.syncIntervalMinutes.toString());
 
       if (this.syncEnabled) {
         this.syncData();
       }
     },
 
-    setSyncInterval(minutes: number) {
-      if (minutes < 1) minutes = 1;
-
-      this.syncIntervalMinutes = minutes;
-
-      if (this.syncEnabled) {
-        this.startAutoSync();
-      }
-
-      localStorage.setItem("clean-day-sync-interval", minutes.toString());
-    },
-
-    async joinSession(sessionId: string) {
+    async joinSession(sessionId: string): Promise<boolean> {
       if (!this.configValid) {
         await this.diagnoseConnection();
         if (!this.configValid) {
-          this.error =
-            "Невозможно подключиться к сессии: проблема с подключением к базе данных";
+          this.error = "Невозможно подключиться к сессии: проблема с подключением к API";
           return false;
         }
       }
 
       try {
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/sessions?id=eq.${sessionId}`,
-          {
-            headers: {
-              apikey: SUPABASE_KEY,
-              Authorization: `Bearer ${SUPABASE_KEY}`,
-            },
-          }
-        );
+        const response = await fetch(`${API_BASE_URL}/sync/${sessionId}`, {
+          method: 'GET',
+          headers: this.getApiHeaders(),
+        });
 
-        const data = await response.json();
-        if (!data || data.length === 0) {
+        if (response.status === 404) {
           this.error = "Сессия не найдена";
           return false;
         }
+
+        if (!response.ok) {
+          this.error = `Ошибка при получении сессии: ${response.status}`;
+          return false;
+        }
+
+        const sessionData: SyncData = await response.json();
 
         this.sessionId = sessionId;
         localStorage.setItem("clean-day-session-id", sessionId);
@@ -284,8 +274,7 @@ KEY: ${
         this.syncEnabled = true;
         localStorage.setItem("clean-day-sync-enabled", "true");
 
-        await this.fetchData();
-
+        this.applyReceivedData(sessionData);
         this.startAutoSync();
 
         return true;
@@ -296,7 +285,7 @@ KEY: ${
       }
     },
 
-    async processUrlParams() {
+    async processUrlParams(): Promise<void> {
       if (typeof window === "undefined") return;
 
       const urlParams = new URLSearchParams(window.location.search);
@@ -309,7 +298,7 @@ KEY: ${
       }
     },
 
-    async syncData() {
+    async syncData(): Promise<void> {
       if (!this.syncEnabled || !this.sessionId || this.isSyncing) return;
 
       this.isSyncing = true;
@@ -327,39 +316,44 @@ KEY: ${
       }
     },
 
-    async fetchData() {
+    async fetchData(): Promise<void> {
       if (!this.syncEnabled || !this.sessionId) return;
 
       try {
-        const response = await fetch(
-          `${SUPABASE_URL}/rest/v1/sessions?id=eq.${this.sessionId}`,
-          {
-            headers: {
-              apikey: SUPABASE_KEY,
-              Authorization: `Bearer ${SUPABASE_KEY}`,
-            },
-          }
-        );
+        console.log('Fetching data for session:', this.sessionId);
+        
+        const response = await fetch(`${API_BASE_URL}/sync/${this.sessionId}`, {
+          method: 'GET',
+          headers: this.getApiHeaders(),
+        });
 
-        const data = await response.json();
-        if (!data || data.length === 0) return;
+        console.log('Fetch response:', {
+          status: response.status,
+          statusText: response.statusText,
+          url: response.url
+        });
 
-        const syncData = data[0].data as SyncData;
-        const userStore = useUserStore();
-        const achievementsStore = useAchievementsStore();
+        if (response.status === 404) {
+          console.log('Session not found, will create new one');
+          await this.pushData();
+          return;
+        }
 
-        if (syncData.lastUpdated > this.lastSync) {
-          if (syncData.user) {
-            userStore.$patch(syncData.user);
-            userStore.saveState();
-          }
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Fetch failed:', errorText);
+          throw new Error(`API error: ${response.status} ${response.statusText} - ${errorText}`);
+        }
 
-          if (syncData.achievements) {
-            achievementsStore.unlockedAchievements = syncData.achievements;
-            achievementsStore.saveAchievements();
-          }
+        const sessionData: SyncData = await response.json();
+        console.log('Fetched session data:', sessionData);
 
-          this.lastSync = syncData.lastUpdated;
+        if (sessionData.lastUpdated > this.lastSync) {
+          console.log('Applying received data, lastUpdated:', sessionData.lastUpdated, 'vs lastSync:', this.lastSync);
+          this.applyReceivedData(sessionData);
+          this.lastSync = sessionData.lastUpdated;
+        } else {
+          console.log('Local data is up to date');
         }
       } catch (error) {
         console.error("Ошибка при загрузке данных:", error);
@@ -367,80 +361,157 @@ KEY: ${
       }
     },
 
-    async pushData() {
+    applyReceivedData(data: SyncData): void {
+      const userStore = useUserStore();
+      const achievementsStore = useAchievementsStore();
+
+      userStore.$patch({
+        quitDate: data.quitDate || null,
+        userName: data.userName,
+        cigarettesPerDay: data.cigarettesPerDay,
+        cigarettePrice: data.cigarettePrice,
+        cigarettesInPack: data.cigarettesInPack,
+        notifications: data.notifications,
+        achievementNotifications: data.achievementNotifications,
+        theme: data.theme,
+      });
+      userStore.saveState();
+
+      const achievementsArray = data.achievements ? data.achievements.split(',').filter(Boolean) : [];
+      achievementsStore.unlockedAchievements = achievementsArray;
+      achievementsStore.saveAchievements();
+    },
+
+    getCurrentSyncData(): SyncData {
+      const userStore = useUserStore();
+      const achievementsStore = useAchievementsStore();
+
+      return {
+        id: this.sessionId,
+        quitDate: userStore.quitDate || "",
+        userName: userStore.userName,
+        cigarettesPerDay: userStore.cigarettesPerDay,
+        cigarettePrice: userStore.cigarettePrice,
+        cigarettesInPack: userStore.cigarettesInPack,
+        notifications: userStore.notifications,
+        achievementNotifications: userStore.achievementNotifications,
+        theme: userStore.theme,
+        achievements: achievementsStore.unlockedAchievements.join(','),
+        lastUpdated: Date.now(),
+        createdAt: Date.now(),
+      };
+    },
+
+    async pushData(): Promise<void> {
       if (!this.syncEnabled || !this.sessionId) return;
 
       try {
-        const userStore = useUserStore();
-        const achievementsStore = useAchievementsStore();
+        const syncData = this.getCurrentSyncData();
+        console.log('Attempting to sync data:', { sessionId: this.sessionId, syncData });
 
-        const syncData: SyncData = {
-          user: {
-            quitDate: userStore.quitDate,
-            userName: userStore.userName,
-            cigarettesPerDay: userStore.cigarettesPerDay,
-            cigarettePrice: userStore.cigarettePrice,
-            cigarettesInPack: userStore.cigarettesInPack,
-            notifications: userStore.notifications,
-            achievementNotifications: userStore.achievementNotifications,
-            theme: userStore.theme, 
-          },
-          achievements: achievementsStore.unlockedAchievements,
-          lastUpdated: Date.now(),
-        };
+        const checkResponse = await fetch(`${API_BASE_URL}/sync/${this.sessionId}`, {
+          method: 'GET',
+          headers: this.getApiHeaders(),
+        });
 
-        const checkResponse = await fetch(
-          `${SUPABASE_URL}/rest/v1/sessions?id=eq.${this.sessionId}`,
-          {
-            headers: {
-              apikey: SUPABASE_KEY,
-              Authorization: `Bearer ${SUPABASE_KEY}`,
-            },
-          }
-        );
+        console.log('Check response status:', checkResponse.status);
 
-        const existingData = await checkResponse.json();
+        let response: Response;
 
-        if (existingData && existingData.length > 0) {
-          await fetch(
-            `${SUPABASE_URL}/rest/v1/sessions?id=eq.${this.sessionId}`,
-            {
-              method: "PATCH",
-              headers: {
-                apikey: SUPABASE_KEY,
-                Authorization: `Bearer ${SUPABASE_KEY}`,
-                "Content-Type": "application/json",
-                Prefer: "return=minimal",
-              },
-              body: JSON.stringify({
-                data: syncData,
-              }),
-            }
-          );
-        } else {
-          await fetch(`${SUPABASE_URL}/rest/v1/sessions`, {
-            method: "POST",
-            headers: {
-              apikey: SUPABASE_KEY,
-              Authorization: `Bearer ${SUPABASE_KEY}`,
-              "Content-Type": "application/json",
-              Prefer: "return=minimal",
-            },
-            body: JSON.stringify({
-              id: this.sessionId,
-              data: syncData,
-            }),
+        if (checkResponse.ok) {
+          console.log('Session exists, updating with PUT');
+          response = await fetch(`${API_BASE_URL}/sync/${this.sessionId}`, {
+            method: 'PUT',
+            headers: this.getApiHeaders(),
+            body: JSON.stringify(syncData),
           });
+        } else if (checkResponse.status === 404) {
+          console.log('Session does not exist, creating new');
+          
+          response = await fetch(`${API_BASE_URL}/sync/${this.sessionId}`, {
+            method: 'PUT',
+            headers: this.getApiHeaders(),
+            body: JSON.stringify(syncData),
+          });
+
+          if (!response.ok) {
+            console.log('PUT failed, trying POST');
+            response = await fetch(`${API_BASE_URL}/sync`, {
+              method: 'POST',
+              headers: this.getApiHeaders(),
+              body: JSON.stringify(syncData),
+            });
+          }
+        } else {
+          const errorText = await checkResponse.text();
+          console.error('Check request failed:', errorText);
+          throw new Error(`Ошибка при проверке сессии: ${checkResponse.status} - ${errorText}`);
         }
 
+        console.log('Final response status:', response.status);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`API error details:`, {
+            status: response.status,
+            statusText: response.statusText,
+            body: errorText,
+            url: response.url,
+            headers: Object.fromEntries(response.headers.entries())
+          });
+          
+          if (response.status === 400) {
+            throw new Error(`Неверный формат данных: ${errorText}`);
+          } else if (response.status === 401) {
+            throw new Error(`Ошибка авторизации: проверьте API ключ`);
+          } else if (response.status === 403) {
+            throw new Error(`Доступ запрещен: проверьте права доступа`);
+          } else if (response.status === 500) {
+            throw new Error(`Ошибка сервера: ${errorText}`);
+          } else {
+            throw new Error(`API error: ${response.status} ${response.statusText} - ${errorText}`);
+          }
+        }
+
+        const responseData = await response.json();
+        console.log('Response data:', responseData);
+
         this.lastSync = syncData.lastUpdated;
+        console.log('Sync completed successfully');
       } catch (error) {
-        console.error("Ошибка при отправке данных:", error);
+        console.error("Подробная ошибка при отправке данных:", error);
+        
+        if (error instanceof Error) {
+          this.error = `Детальная ошибка: ${error.message}`;
+        } else {
+          this.error = `Неизвестная ошибка при синхронизации: ${String(error)}`;
+        }
+        
         throw error;
       }
     },
 
-    resetSync() {
+    async deleteSession(): Promise<void> {
+      if (!this.sessionId) return;
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/sync/${this.sessionId}`, {
+          method: 'DELETE',
+          headers: this.getApiHeaders(),
+        });
+
+        if (response.ok || response.status === 404) {
+          this.resetSync();
+        } else {
+          throw new Error(`Ошибка при удалении сессии: ${response.status}`);
+        }
+      } catch (error) {
+        console.error("Ошибка при удалении сессии:", error);
+        this.error = "Ошибка при удалении сессии";
+      }
+    },
+
+    resetSync(): void {
       this.disableSync();
       this.sessionId = uuidv4();
       localStorage.setItem("clean-day-session-id", this.sessionId);

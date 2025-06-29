@@ -1,35 +1,43 @@
 <template>
-    <div class="min-h-screen bg-gray-100 dark:bg-gray-950 flex flex-col transition-colors duration-300">
+    <div class="min-h-screen glass-background flex flex-col transition-colors duration-300">
         <UNotifications />
 
-        <nav class="bg-gray-800 bg-opacity-90 backdrop-filter backdrop-blur-xl text-white py-3 px-4 sticky top-0 z-50 shadow-lg">
-            <div class="container mx-auto flex justify-between items-center">
+        <nav 
+            class="backdrop-blur-2xl text-white sticky top-0 z-50 border-b shadow-xl transition-all duration-500 ease-in-out"
+            :class="[
+                scrolled 
+                    ? 'bg-white/20 dark:bg-black/30 border-white/30 dark:border-white/20 py-2 px-4 shadow-2xl' 
+                    : 'bg-white/10 dark:bg-black/20 border-white/20 dark:border-white/10 py-3 px-4 shadow-xl'
+            ]"
+        >
+            <div class="container mx-auto flex justify-between items-center transition-all duration-300">
                 <NuxtLink to="/" class="flex items-center">
-                    <span class="font-bold text-lg">Clean Day</span>
+                    <span class="font-bold text-lg text-gray-900 dark:text-white drop-shadow-sm">Clean Day</span>
                 </NuxtLink>
 
                 <div class="hidden md:flex space-x-4">
-                    <NuxtLink to="/" class="px-3 py-2 rounded hover:bg-gray-700 transition-colors">Главная</NuxtLink>
-                    <!-- <NuxtLink to="/statistics" class="px-3 py-2 rounded hover:bg-gray-700 transition-colors">Статистика</NuxtLink> -->
-                    <NuxtLink to="/achievements" class="px-3 py-2 rounded hover:bg-gray-700 transition-colors">Достижения</NuxtLink>
-                    <NuxtLink to="/settings" class="px-3 py-2 rounded hover:bg-gray-700 transition-colors">Настройки</NuxtLink>
+                    <NuxtLink to="/" class="px-3 py-2 rounded-lg hover:bg-white/20 dark:hover:bg-white/10 transition-all duration-200 text-gray-900 dark:text-white backdrop-blur-sm">Главная</NuxtLink>
+                    <!-- <NuxtLink to="/statistics" class="px-3 py-2 rounded-lg hover:bg-white/20 dark:hover:bg-white/10 transition-all duration-200 text-gray-900 dark:text-white backdrop-blur-sm">Статистика</NuxtLink> -->
+                    <NuxtLink to="/achievements" class="px-3 py-2 rounded-lg hover:bg-white/20 dark:hover:bg-white/10 transition-all duration-200 text-gray-900 dark:text-white backdrop-blur-sm">Достижения</NuxtLink>
+                    <NuxtLink to="/settings" class="px-3 py-2 rounded-lg hover:bg-white/20 dark:hover:bg-white/10 transition-all duration-200 text-gray-900 dark:text-white backdrop-blur-sm">Настройки</NuxtLink>
                 </div>
 
-                <button class="md:hidden px-2 py-1 rounded bg-gray-700 transition-colors hover:bg-gray-600" @click="toggleMobileMenu">
+                <button class="md:hidden px-3 py-2 rounded-lg bg-white/20 dark:bg-white/10 backdrop-blur-sm transition-all duration-200 hover:bg-white/30 dark:hover:bg-white/20 text-gray-900 dark:text-white border border-white/30 dark:border-white/20" @click="toggleMobileMenu">
                     <span v-if="!mobileMenuOpen">Меню</span>
                     <span v-else>Закрыть</span>
                 </button>
             </div>
         </nav>
 
-        <Transition name="slide-fade">
-            <div v-if="mobileMenuOpen" class="md:hidden bg-gray-900 text-white fixed top-14 left-0 right-0 z-40 shadow-lg">
-                <div class="container mx-auto py-2">
+        <Transition name="mobile-slide">
+            <div v-if="mobileMenuOpen" class="md:hidden bg-gray-800 dark:bg-gray-900 text-white fixed left-0 right-0 z-40 border-b border-gray-700 dark:border-gray-800 shadow-lg mobile-menu"
+                 :style="{ top: scrolled ? '56px' : '64px' }">
+                <div class="container mx-auto py-3">
                     <div class="flex flex-col space-y-2 px-4 py-2">
-                        <NuxtLink to="/" @click="closeMobileMenu" class="px-3 py-2 rounded hover:bg-gray-800 transition-colors">Главная</NuxtLink>
-                        <!-- <NuxtLink to="/statistics" @click="closeMobileMenu" class="px-3 py-2 rounded hover:bg-gray-800 transition-colors">Статистика</NuxtLink> -->
-                        <NuxtLink to="/achievements" @click="closeMobileMenu" class="px-3 py-2 rounded hover:bg-gray-800 transition-colors">Достижения</NuxtLink>
-                        <NuxtLink to="/settings" @click="closeMobileMenu" class="px-3 py-2 rounded hover:bg-gray-800 transition-colors">Настройки</NuxtLink>
+                        <NuxtLink to="/" @click="closeMobileMenu" class="px-3 py-2 rounded-lg hover:bg-gray-700 dark:hover:bg-gray-800 transition-all duration-200">Главная</NuxtLink>
+                        <!-- <NuxtLink to="/statistics" @click="closeMobileMenu" class="px-3 py-2 rounded-lg hover:bg-gray-700 dark:hover:bg-gray-800 transition-all duration-200">Статистика</NuxtLink> -->
+                        <NuxtLink to="/achievements" @click="closeMobileMenu" class="px-3 py-2 rounded-lg hover:bg-gray-700 dark:hover:bg-gray-800 transition-all duration-200">Достижения</NuxtLink>
+                        <NuxtLink to="/settings" @click="closeMobileMenu" class="px-3 py-2 rounded-lg hover:bg-gray-700 dark:hover:bg-gray-800 transition-all duration-200">Настройки</NuxtLink>
                     </div>
                 </div>
             </div>
@@ -63,13 +71,29 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import { useUserStore } from '~/stores/user';
 
 const userStore = useUserStore();
 const mobileMenuOpen = ref(false);
 const typingTextElement = ref(null);
 const isTyping = ref(false);
+const scrolled = ref(false);
+
+const handleScroll = () => {
+    scrolled.value = window.scrollY > 20;
+};
+
+const updateMobileMenuPosition = () => {
+    if (mobileMenuOpen.value) {
+        const navbar = document.querySelector('nav');
+        const mobileMenu = document.querySelector('.mobile-menu');
+        if (navbar && mobileMenu) {
+            const navbarHeight = navbar.offsetHeight;
+            mobileMenu.style.top = `${navbarHeight}px`;
+        }
+    }
+};
 
 const applyTheme = (theme) => {
   if (theme === 'dark') {
@@ -91,6 +115,9 @@ const toggleMobileMenu = () => {
     
     if (mobileMenuOpen.value) {
         document.body.style.overflow = 'hidden';
+        nextTick(() => {
+            updateMobileMenuPosition();
+        });
     } else {
         document.body.style.overflow = '';
     }
@@ -164,6 +191,15 @@ onMounted(() => {
     applyTheme(userStore.theme || 'system');
     
     setupTypingInterval();
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    window.addEventListener('resize', updateMobileMenuPosition, { passive: true });
+});
+
+onUnmounted(() => {
+    window.removeEventListener('scroll', handleScroll);
+    window.removeEventListener('resize', updateMobileMenuPosition);
 });
 </script>
 
@@ -189,6 +225,34 @@ onMounted(() => {
     }
 }
 
+.mobile-slide-enter-active,
+.mobile-slide-leave-active {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform, opacity;
+}
+
+.mobile-slide-enter-from {
+    transform: translateY(-100%);
+    opacity: 0;
+}
+
+.mobile-slide-leave-to {
+    transform: translateY(-100%);
+    opacity: 0;
+}
+
+@media (max-width: 768px) {
+    .mobile-menu {
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        will-change: transform;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        -webkit-perspective: 1000px;
+        perspective: 1000px;
+    }
+}
+
 .slide-fade-enter-active,
 .slide-fade-leave-active {
     transition: all 0.3s ease;
@@ -206,5 +270,84 @@ onMounted(() => {
 
 .transition-colors {
     transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.glass-background {
+    background: 
+        radial-gradient(ellipse 1000px 600px at 15% 80%, rgba(59, 130, 246, 0.04) 0%, transparent 50%),
+        radial-gradient(ellipse 800px 800px at 85% 20%, rgba(37, 99, 235, 0.03) 0%, transparent 50%),
+        
+        repeating-linear-gradient(
+            135deg,
+            transparent 0px,
+            transparent 60px,
+            rgba(59, 130, 246, 0.015) 60px,
+            rgba(59, 130, 246, 0.015) 61px,
+            transparent 61px,
+            transparent 120px
+        ),
+        
+        radial-gradient(circle at 50% 50%, rgba(96, 165, 250, 0.02) 1px, transparent 1px),
+        
+        #f3f4f6;
+    
+    background-size: 
+        1400px 800px,
+        1200px 1200px,
+        240px 240px,
+        80px 80px,
+        100% 100%;
+    
+    background-attachment: fixed;
+}
+
+.dark .glass-background {
+    background: 
+        radial-gradient(ellipse 1000px 600px at 15% 80%, rgba(30, 58, 138, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse 800px 800px at 85% 20%, rgba(29, 78, 216, 0.04) 0%, transparent 50%),
+        
+        repeating-linear-gradient(
+            135deg,
+            transparent 0px,
+            transparent 60px,
+            rgba(59, 130, 246, 0.02) 60px,
+            rgba(59, 130, 246, 0.02) 61px,
+            transparent 61px,
+            transparent 120px
+        ),
+        
+        radial-gradient(circle at 50% 50%, rgba(96, 165, 250, 0.015) 1px, transparent 1px),
+        
+        #030712;
+    
+    background-size: 
+        1400px 800px,
+        1200px 1200px,
+        240px 240px,
+        80px 80px,
+        100% 100%;
+    
+    background-attachment: fixed;
+}
+
+nav {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+}
+
+.dark nav {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.1) 100%);
+}
+
+nav {
+    transform: translateZ(0);
+    will-change: background-color, backdrop-filter, padding, box-shadow;
+}
+
+.mobile-menu {
+    background: #1f2937;
+}
+
+.dark .mobile-menu {
+    background: #111827;
 }
 </style>

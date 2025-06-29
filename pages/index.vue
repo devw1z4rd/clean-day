@@ -3,13 +3,30 @@
     <Timer />
 
     <div v-if="userStore.hasQuit">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <UCard v-for="i in 3" :key="i" class="transition-all hover:-translate-y-1 duration-300"
+          :ui="{
+            ring: '',
+            header: { padding: 'px-6 py-4' },
+            body: { base: 'p-4' }
+          }">
+          <div class="flex items-center">
+            <div class="w-12 h-12 rounded-full flex-shrink-0 mr-4 skeleton"></div>
+            <div class="flex-1">
+              <div class="h-3 skeleton rounded mb-2" style="width: 60%"></div>
+              <div class="h-6 skeleton rounded" style="width: 80%"></div>
+            </div>
+          </div>
+        </UCard>
+      </div>
+      
+      <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <UCard v-for="(stat, index) in statsData" :key="index" class="transition-all hover:-translate-y-1 duration-300"
           :ui="{
             ring: '',
             header: { padding: 'px-6 py-4' },
             body: { base: 'p-4' }
-          }" >
+          }">
           <div class="flex items-center">
             <div class="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center mr-4" :class="{
               'bg-primary-50 text-primary-500': index === 0,
@@ -34,7 +51,30 @@
         </UCard>
       </div>
 
-      <UCard
+      <UCard v-if="isLoading"
+        class="mb-8 bg-primary-50 dark:bg-primary-950 dark:bg-opacity-30 border border-primary-100 dark:border-primary-900"
+        :ui="{
+          ring: '',
+          header: { padding: 'px-6 py-4' },
+          body: { base: 'p-5' },
+          footer: { padding: 'px-6 py-4' }
+        }">
+        <template #header>
+          <div class="h-6 skeleton rounded mx-auto" style="width: 200px"></div>
+        </template>
+
+        <div class="h-4 skeleton rounded mb-2"></div>
+        <div class="h-4 skeleton rounded mb-2" style="width: 90%"></div>
+        <div class="h-4 skeleton rounded" style="width: 75%"></div>
+
+        <template #footer>
+          <div class="flex justify-center">
+            <div class="h-10 skeleton rounded-full" style="width: 150px"></div>
+          </div>
+        </template>
+      </UCard>
+
+      <UCard v-else
         class="mb-8 bg-primary-50 dark:bg-primary-950 dark:bg-opacity-30 border border-primary-100 dark:border-primary-900"
         :ui="{
           ring: '',
@@ -64,7 +104,34 @@
         </template>
       </UCard>
 
-      <UCard class="mb-8" :ui="{
+      <UCard v-if="isLoading" class="mb-8" :ui="{
+        ring: '',
+        header: { padding: 'px-6 py-4' },
+        body: { base: 'p-5' },
+        footer: { padding: 'px-0 py-0' }
+      }">
+        <template #header>
+          <div class="h-6 skeleton rounded mx-auto" style="width: 180px"></div>
+        </template>
+
+        <div class="flex space-x-4 mb-4">
+          <div v-for="i in 3" :key="i" class="h-8 skeleton rounded" style="width: 80px"></div>
+        </div>
+
+        <ul class="space-y-3 pt-4">
+          <li v-for="i in 3" :key="i" class="p-3 rounded-md bg-gray-50 dark:bg-gray-800/30">
+            <div class="flex items-start">
+              <div class="h-4 skeleton rounded mr-3" style="width: 80px"></div>
+              <div class="flex-1">
+                <div class="h-4 skeleton rounded mb-1"></div>
+                <div class="h-4 skeleton rounded" style="width: 70%"></div>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </UCard>
+
+      <UCard v-else class="mb-8" :ui="{
         ring: '',
         header: { padding: 'px-6 py-4' },
         body: { base: 'p-5' },
@@ -140,19 +207,30 @@
       </UCard>
 
       <div class="mb-8">
-        <h2 class="text-xl font-semibold text-center mb-6 text-gray-900 dark:text-gray-100">
+        <h2 v-if="!isLoading" class="text-xl font-semibold text-center mb-6 text-gray-900 dark:text-gray-100">
           Часто задаваемые вопросы
         </h2>
+        <div v-else class="h-6 skeleton rounded mx-auto mb-6" style="width: 250px"></div>
 
         <div class="grid grid-cols-1 gap-4">
-          <UCard v-for="(item, index) in faqItems" :key="index" 
-            class="overflow-hidden transition-all duration-300"
+          <UCard v-if="isLoading" v-for="i in 3" :key="i" class="overflow-hidden">
+            <div class="p-5">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center flex-1">
+                  <div class="w-10 h-10 rounded-full skeleton flex-shrink-0 mr-4"></div>
+                  <div class="h-5 skeleton rounded flex-1" style="max-width: 300px"></div>
+                </div>
+                <div class="w-6 h-6 skeleton rounded ml-4"></div>
+              </div>
+            </div>
+          </UCard>
+
+          <UCard v-else v-for="(item, index) in faqItems" :key="index" 
+            class="overflow-hidden transition-all duration-300 cursor-pointer"
+            @click="toggleFaq(index)"
           >
             <div class="p-5">
-              <div 
-                @click="toggleFaq(index)" 
-                class="flex items-center justify-between cursor-pointer"
-              >
+              <div class="flex items-center justify-between">
                 <div class="flex items-center">
                   <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 mr-4"
                     :class="{
@@ -197,7 +275,8 @@ const achievementsStore = useAchievementsStore();
 
 const cigaretteForms = ['сигарета', 'сигареты', 'сигарет'];
 const currentMessage = ref('');
-const showAllHealth = ref(false); 
+const showAllHealth = ref(false);
+const isLoading = ref(true);
 
 const getWordForm = (number, forms) => {
   const lastDigit = number % 10;
@@ -365,7 +444,14 @@ const isActive = (timeStr) => {
   return timeMap[timeStr] || false;
 };
 
-onMounted(() => {
+const simulateLoading = async () => {
+  await new Promise(resolve => setTimeout(resolve, 250)); 
+  isLoading.value = false;
+};
+
+onMounted(async () => {
+  simulateLoading();
+  
   getRandomMessage();
   achievementsStore.initialize();
   achievementsStore.checkAchievements();
@@ -373,6 +459,36 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.skeleton {
+  background: linear-gradient(90deg, 
+    #f0f0f0 25%, 
+    #e0e0e0 50%, 
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+@media (prefers-color-scheme: dark) {
+  .skeleton {
+    background: linear-gradient(90deg, 
+      #374151 25%, 
+      #4b5563 50%, 
+      #374151 75%
+    );
+    background-size: 200% 100%;
+  }
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.5s;
@@ -381,5 +497,27 @@ onMounted(() => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+.skeleton.rounded {
+  border-radius: 0.375rem;
+}
+
+.skeleton.rounded-full {
+  border-radius: 9999px;
+}
+
+@media (max-width: 768px) {
+  .skeleton[style*="width: 300px"] {
+    max-width: 80% !important;
+  }
+  
+  .skeleton[style*="width: 250px"] {
+    max-width: 70% !important;
+  }
+  
+  .skeleton[style*="width: 200px"] {
+    max-width: 60% !important;
+  }
 }
 </style>
