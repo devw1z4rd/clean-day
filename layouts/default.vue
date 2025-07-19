@@ -273,61 +273,11 @@ onUnmounted(() => {
 }
 
 .glass-background {
-    background: 
-        radial-gradient(ellipse 1000px 600px at 15% 80%, rgba(59, 130, 246, 0.04) 0%, transparent 50%),
-        radial-gradient(ellipse 800px 800px at 85% 20%, rgba(37, 99, 235, 0.03) 0%, transparent 50%),
-        
-        repeating-linear-gradient(
-            135deg,
-            transparent 0px,
-            transparent 60px,
-            rgba(59, 130, 246, 0.015) 60px,
-            rgba(59, 130, 246, 0.015) 61px,
-            transparent 61px,
-            transparent 120px
-        ),
-        
-        radial-gradient(circle at 50% 50%, rgba(96, 165, 250, 0.02) 1px, transparent 1px),
-        
-        #f3f4f6;
-    
-    background-size: 
-        1400px 800px,
-        1200px 1200px,
-        240px 240px,
-        80px 80px,
-        100% 100%;
-    
-    background-attachment: fixed;
+    background: #dddddd;
 }
 
 .dark .glass-background {
-    background: 
-        radial-gradient(ellipse 1000px 600px at 15% 80%, rgba(30, 58, 138, 0.06) 0%, transparent 50%),
-        radial-gradient(ellipse 800px 800px at 85% 20%, rgba(29, 78, 216, 0.04) 0%, transparent 50%),
-        
-        repeating-linear-gradient(
-            135deg,
-            transparent 0px,
-            transparent 60px,
-            rgba(59, 130, 246, 0.02) 60px,
-            rgba(59, 130, 246, 0.02) 61px,
-            transparent 61px,
-            transparent 120px
-        ),
-        
-        radial-gradient(circle at 50% 50%, rgba(96, 165, 250, 0.015) 1px, transparent 1px),
-        
-        #030712;
-    
-    background-size: 
-        1400px 800px,
-        1200px 1200px,
-        240px 240px,
-        80px 80px,
-        100% 100%;
-    
-    background-attachment: fixed;
+    background: #060d16;
 }
 
 nav {

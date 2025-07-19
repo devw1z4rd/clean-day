@@ -8,7 +8,7 @@
       </template>
 
       <div v-if="userStore.hasQuit" class="py-6 flex flex-col items-center">
-        <div class="grid grid-cols-4 gap-4 text-center">
+        <div class="grid grid-cols-4 gap-4 text-center mb-6">
           <div v-for="(unit, index) in timeUnits" :key="index" class="flex flex-col items-center">
             <div
               class="w-24 h-24 flex items-center justify-center bg-primary-500 text-white text-3xl font-bold rounded-lg shadow-md">
@@ -19,8 +19,18 @@
             </div>
           </div>
         </div>
+
+        <div class="w-full max-w-md mb-4">
+          <div class="bg-gray-200 dark:bg-gray-700 rounded-full h-6 overflow-hidden shadow-inner">
+            <div class="h-full bg-gradient-to-r from-green-400 to-primary-500 transition-all duration-300 ease-out"
+              :style="`width: ${calculateProgressPercentage()}%`"></div>
+          </div>
+          <div class="text-sm text-center text-gray-600 dark:text-gray-400 mt-2 font-medium">
+            Прогресс: {{ calculateProgressPercentage() }}% ({{ timeSinceQuit.days }}/21 дней)
+          </div>
+        </div>
         
-        <div v-if="showResetButton" class="mt-6">
+        <div v-if="showResetButton" class="mt-2">
           <UButton color="red" variant="soft" @click="showResetConfirm = true" size="sm" icon="i-heroicons-arrow-path">
             Я сорвался
           </UButton>
@@ -73,7 +83,7 @@
             :style="`width: ${calculateProgressPercentage()}%`"></div>
         </div>
         <div class="text-xs text-center text-gray-500 dark:text-gray-400 mt-1">
-          Прогресс: {{ calculateProgressPercentage() }}%
+          Прогресс: {{ calculateProgressPercentage() }}% ({{ timeSinceQuit.days }}/21 дней)
         </div>
         
         <div v-if="showResetButton" class="flex justify-center mt-4">
@@ -198,7 +208,7 @@ const calculateTimeDifference = () => {
 };
 
 const calculateProgressPercentage = () => {
-  const goalDays = 100;
+  const goalDays = 21;
   const percentage = Math.min(Math.round((timeSinceQuit.value.days / goalDays) * 100), 100);
   return percentage;
 };
