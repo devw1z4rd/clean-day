@@ -1,265 +1,114 @@
 <template>
   <div>
-    <Timer />
-
-    <div v-if="userStore.hasQuit">
-      <div v-if="isLoading" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <UCard v-for="i in 3" :key="i" class="transition-all hover:-translate-y-1 duration-300"
-          :ui="{
-            ring: '',
-            header: { padding: 'px-6 py-4' },
-            body: { base: 'p-4' }
-          }">
-          <div class="flex items-center">
-            <div class="w-12 h-12 rounded-full flex-shrink-0 mr-4 skeleton"></div>
-            <div class="flex-1">
-              <div class="h-3 skeleton rounded mb-2" style="width: 60%"></div>
-              <div class="h-6 skeleton rounded" style="width: 80%"></div>
-            </div>
-          </div>
-        </UCard>
-      </div>
-      
-      <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <UCard v-for="(stat, index) in statsData" :key="index" class="transition-all hover:-translate-y-1 duration-300"
-          :ui="{
-            ring: '',
-            header: { padding: 'px-6 py-4' },
-            body: { base: 'p-4' }
-          }">
-          <div class="flex items-center">
-            <div class="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center mr-4" :class="{
-              'bg-primary-50 text-primary-500': index === 0,
-              'bg-blue-50 text-blue-500': index === 1,
-              'bg-yellow-50 text-yellow-500': index === 2
-            }">
-              <span class="text-2xl">{{ stat.icon }}</span>
-            </div>
-            <div>
-              <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                {{ stat.title }}
-              </h3>
-              <div class="text-xl md:text-2xl font-bold mt-1" :class="{
-                'text-primary-600': index === 0,
-                'text-blue-600': index === 1,
-                'text-yellow-600': index === 2
-              }">
-                {{ stat.value }}
-              </div>
-            </div>
-          </div>
-        </UCard>
+    <!-- Mobile: stacked. Desktop: split layout, centered -->
+    <div class="md:flex md:gap-12 lg:gap-16 md:items-center md:min-h-[calc(100vh-8rem)] md:justify-center">
+      <!-- Left: Timer, sticky on desktop -->
+      <div class="md:w-[42%] lg:w-[38%] md:sticky md:top-20 md:self-center">
+        <Timer />
       </div>
 
-      <UCard v-if="isLoading"
-        class="mb-8 bg-primary-50 dark:bg-primary-950 dark:bg-opacity-30 border border-primary-100 dark:border-primary-900"
-        :ui="{
-          ring: '',
-          header: { padding: 'px-6 py-4' },
-          body: { base: 'p-5' },
-          footer: { padding: 'px-6 py-4' }
-        }">
-        <template #header>
-          <div class="h-6 skeleton rounded mx-auto" style="width: 200px"></div>
-        </template>
-
-        <div class="h-4 skeleton rounded mb-2"></div>
-        <div class="h-4 skeleton rounded mb-2" style="width: 90%"></div>
-        <div class="h-4 skeleton rounded" style="width: 75%"></div>
-
-        <template #footer>
-          <div class="flex justify-center">
-            <div class="h-10 skeleton rounded-full" style="width: 150px"></div>
+      <!-- Right: scrollable content -->
+      <div class="md:flex-1" v-if="userStore.hasQuit">
+        <!-- Stats -->
+        <div v-if="isLoading" class="grid grid-cols-3 gap-6 mb-8 md:mb-10 px-1 md:px-0">
+          <div v-for="i in 3" :key="i">
+            <div class="h-3 skeleton rounded mb-2" style="width: 60%"></div>
+            <div class="h-6 skeleton rounded" style="width: 80%"></div>
           </div>
-        </template>
-      </UCard>
-
-      <UCard v-else
-        class="mb-8 bg-primary-50 dark:bg-primary-950 dark:bg-opacity-30 border border-primary-100 dark:border-primary-900"
-        :ui="{
-          ring: '',
-          header: { padding: 'px-6 py-4' },
-          body: { base: 'p-5' },
-          footer: { padding: 'px-6 py-4' }
-        }">
-        <template #header>
-          <h2 class="text-xl font-semibold text-primary-700 dark:text-primary-300 text-center">
-            {{ userStore.hasUserName ? 'Ваше подбадривание' : 'Факт дня' }}
-          </h2>
-        </template>
-
-        <transition name="fade" mode="out-in">
-          <p :key="currentMessage" class="text-lg text-gray-700 dark:text-gray-300 italic text-center">
-            {{ currentMessage }}
-          </p>
-        </transition>
-
-        <template #footer>
-          <div class="flex justify-center">
-            <UButton color="primary" variant="soft" @click="getRandomMessage" icon="i-heroicons-arrow-path"
-              class="rounded-full">
-              {{ userStore.hasUserName ? 'Новое подбадривание' : 'Новый факт' }}
-            </UButton>
-          </div>
-        </template>
-      </UCard>
-
-      <UCard v-if="isLoading" class="mb-8" :ui="{
-        ring: '',
-        header: { padding: 'px-6 py-4' },
-        body: { base: 'p-5' },
-        footer: { padding: 'px-0 py-0' }
-      }">
-        <template #header>
-          <div class="h-6 skeleton rounded mx-auto" style="width: 180px"></div>
-        </template>
-
-        <div class="flex space-x-4 mb-4">
-          <div v-for="i in 3" :key="i" class="h-8 skeleton rounded" style="width: 80px"></div>
         </div>
 
-        <ul class="space-y-3 pt-4">
-          <li v-for="i in 3" :key="i" class="p-3 rounded-md bg-gray-50 dark:bg-gray-800/30">
-            <div class="flex items-start">
-              <div class="h-4 skeleton rounded mr-3" style="width: 80px"></div>
-              <div class="flex-1">
-                <div class="h-4 skeleton rounded mb-1"></div>
-                <div class="h-4 skeleton rounded" style="width: 70%"></div>
-              </div>
+        <div v-else class="grid grid-cols-3 gap-6 mb-8 md:mb-10 px-1 md:px-0">
+          <div v-for="(stat, index) in statsData" :key="index">
+            <div class="text-[11px] md:text-xs text-gray-500 uppercase tracking-widest mb-1">
+              {{ stat.title }}
             </div>
-          </li>
-        </ul>
-      </UCard>
+            <div class="text-lg md:text-2xl font-semibold text-white tabular-nums">
+              {{ stat.value }}
+            </div>
+          </div>
+        </div>
 
-      <UCard v-else class="mb-8" :ui="{
-        ring: '',
-        header: { padding: 'px-6 py-4' },
-        body: { base: 'p-5' },
-        footer: { padding: 'px-0 py-0' }
-      }">
-        <template #header>
-          <h2 class="text-xl font-semibold text-center text-gray-900 dark:text-gray-100">
+        <!-- Fact / encouragement -->
+        <div v-if="isLoading" class="mb-8 md:mb-10 px-1 md:px-0">
+          <div class="h-4 skeleton rounded mb-2"></div>
+          <div class="h-4 skeleton rounded" style="width: 75%"></div>
+        </div>
+
+        <div v-else class="mb-8 md:mb-10 px-1 md:px-0">
+          <div class="text-[11px] md:text-xs text-gray-500 uppercase tracking-widest mb-3">
+            {{ userStore.hasUserName ? 'Подбадривание' : 'Факт дня' }}
+          </div>
+          <transition name="fade" mode="out-in">
+            <p :key="currentMessage" class="text-sm md:text-base text-gray-400 leading-relaxed">
+              {{ currentMessage }}
+            </p>
+          </transition>
+        </div>
+
+        <!-- Health improvements -->
+        <div v-if="isLoading" class="mb-8 md:mb-10 px-1 md:px-0">
+          <div class="h-4 skeleton rounded mb-4" style="width: 160px"></div>
+          <div v-for="i in 3" :key="i" class="mb-2">
+            <div class="h-4 skeleton rounded mb-1" style="width: 30%"></div>
+            <div class="h-4 skeleton rounded" style="width: 80%"></div>
+          </div>
+        </div>
+
+        <div v-else class="mb-8 md:mb-10 px-1 md:px-0">
+          <div class="text-[11px] md:text-xs text-gray-500 uppercase tracking-widest mb-4">
             Улучшения здоровья
-          </h2>
-        </template>
+          </div>
 
-        <UTabs :items="[
-          { label: 'Все', slot: 'all' },
-          { label: 'Достигнуто', slot: 'active' },
-          { label: 'Предстоит', slot: 'upcoming' }
-        ]" class="mb-4">
-          <template #all>
-            <ul class="space-y-3 pt-4">
-              <li v-for="(item, index) in displayedHealthImprovements" :key="index" class="p-3 rounded-md"
-                :class="isActive(item.time) ? 'bg-primary-50 dark:bg-primary-900/30 border-l-4 border-l-primary-500' : 'bg-gray-50 dark:bg-gray-800/30 border-l-4 border-l-gray-200 dark:border-l-gray-700'">
-                <span class="font-bold mr-2"
-                  :class="isActive(item.time) ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'">
-                  {{ item.time }}:
-                </span>
-                <span
-                  :class="isActive(item.time) ? 'text-gray-800 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'">
-                  {{ item.description }}
-                </span>
-              </li>
-            </ul>
-            
-            <div v-if="sortedHealthImprovements.length > 3" class="flex justify-center pt-4">
-              <UButton 
-                @click="showAllHealth = !showAllHealth" 
-                variant="ghost" 
-                color="primary"
-                :icon="showAllHealth ? 'i-heroicons-chevron-up' : 'i-heroicons-chevron-down'"
-                class="text-sm"
-              >
-                {{ showAllHealth ? 'Скрыть' : `Посмотреть ещё ${sortedHealthImprovements.length - 3}` }}
-              </UButton>
-            </div>
-          </template>
+          <ul class="space-y-1">
+            <li v-for="(item, index) in filteredHealthItems" :key="index"
+              class="py-2 flex flex-col sm:flex-row sm:items-baseline gap-0.5 sm:gap-3">
+              <span class="text-xs font-medium shrink-0 w-20"
+                :class="isActive(item.time) ? 'text-green-500' : 'text-gray-600'">
+                {{ item.time }}
+              </span>
+              <span class="text-sm"
+                :class="isActive(item.time) ? 'text-gray-300' : 'text-gray-500'">
+                {{ item.description }}
+              </span>
+            </li>
+          </ul>
 
-          <template #active>
-            <ul class="space-y-3 pt-4">
-              <li v-for="(item, index) in healthImprovements.filter(item => isActive(item.time))" :key="index"
-                class="p-3 rounded-md bg-primary-50 dark:bg-primary-900/30 border-l-4 border-l-primary-500">
-                <span class="font-bold mr-2 text-primary-600 dark:text-primary-400">
-                  {{ item.time }}:
-                </span>
-                <span class="text-gray-800 dark:text-gray-100">
-                  {{ item.description }}
-                </span>
-              </li>
-            </ul>
-          </template>
-
-          <template #upcoming>
-            <ul class="space-y-3 pt-4">
-              <li v-for="(item, index) in healthImprovements.filter(item => !isActive(item.time))" :key="index"
-                class="p-3 rounded-md bg-gray-50 dark:bg-gray-800/30 border-l-4 border-l-gray-200 dark:border-l-gray-700">
-                <span class="font-bold mr-2 text-gray-500 dark:text-gray-400">
-                  {{ item.time }}:
-                </span>
-                <span class="text-gray-500 dark:text-gray-400">
-                  {{ item.description }}
-                </span>
-              </li>
-            </ul>
-          </template>
-        </UTabs>
-      </UCard>
-
-      <div class="mb-8">
-        <h2 v-if="!isLoading" class="text-xl font-semibold text-center mb-6 text-gray-900 dark:text-gray-100">
-          Часто задаваемые вопросы
-        </h2>
-        <div v-else class="h-6 skeleton rounded mx-auto mb-6" style="width: 250px"></div>
-
-        <div class="grid grid-cols-1 gap-4">
-          <UCard v-if="isLoading" v-for="i in 3" :key="i" class="overflow-hidden">
-            <div class="p-5">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center flex-1">
-                  <div class="w-10 h-10 rounded-full skeleton flex-shrink-0 mr-4"></div>
-                  <div class="h-5 skeleton rounded flex-1" style="max-width: 300px"></div>
-                </div>
-                <div class="w-6 h-6 skeleton rounded ml-4"></div>
-              </div>
-            </div>
-          </UCard>
-
-          <UCard v-else v-for="(item, index) in faqItems" :key="index" 
-            class="overflow-hidden transition-all duration-300 cursor-pointer"
-            @click="toggleFaq(index)"
-          >
-            <div class="p-5">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center">
-                  <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 mr-4"
-                    :class="{
-                      'bg-primary-100 text-primary-600 dark:bg-primary-900/40 dark:text-primary-400': index === 0,
-                      'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400': index === 1,
-                      'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/40 dark:text-yellow-400': index === 2
-                    }">
-                    <UIcon name="i-heroicons-question-mark-circle" class="text-xl" />
-                  </div>
-                  <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">
-                    {{ item.question }}
-                  </h3>
-                </div>
-                <div class="transition-transform duration-300" :class="{'rotate-180': openFaqs[index]}">
-                  <UIcon name="i-heroicons-chevron-down" class="text-xl text-gray-600 dark:text-gray-400" />
-                </div>
-              </div>
-              
-              <div 
-                class="overflow-hidden transition-all duration-300"
-                :class="[openFaqs[index] ? 'max-h-96 opacity-100 mt-4' : 'max-h-0 opacity-0']"
-              >
-                <div class="ml-14 text-gray-700 dark:text-gray-300 leading-relaxed">
-                  {{ item.answer }}
-                </div>
-              </div>
-            </div>
-          </UCard>
+          <div v-if="!showAllHealth && sortedHealthImprovements.length > 5" class="mt-3">
+            <button @click="showAllHealth = true"
+              class="text-xs text-gray-600 hover:text-gray-300 transition-colors">
+              Показать все ({{ sortedHealthImprovements.length }})
+            </button>
+          </div>
+          <div v-if="showAllHealth && sortedHealthImprovements.length > 5" class="mt-3">
+            <button @click="showAllHealth = false"
+              class="text-xs text-gray-600 hover:text-gray-300 transition-colors">
+              Скрыть
+            </button>
+          </div>
         </div>
+
+        <!-- FAQ -->
+        <!-- <div class="mb-8 md:mb-10 px-1 md:px-0">
+          <div v-if="isLoading">
+            <div class="h-4 skeleton rounded mb-4" style="width: 200px"></div>
+            <div v-for="i in 3" :key="i" class="mb-4">
+              <div class="h-4 skeleton rounded mb-1" style="width: 60%"></div>
+              <div class="h-3 skeleton rounded" style="width: 90%"></div>
+            </div>
+          </div>
+
+          <div v-else>
+            <div class="text-[11px] md:text-xs text-gray-500 uppercase tracking-widest mb-4">
+              Вопросы и ответы
+            </div>
+            <div class="space-y-6">
+              <div v-for="(item, index) in faqItems" :key="index">
+                <div class="text-sm text-gray-300 mb-1">{{ item.question }}</div>
+                <div class="text-sm text-gray-500 leading-relaxed">{{ item.answer }}</div>
+              </div>
+            </div>
+          </div>
+        </div> -->
       </div>
     </div>
   </div>
@@ -281,36 +130,24 @@ const isLoading = ref(true);
 const getWordForm = (number, forms) => {
   const lastDigit = number % 10;
   const lastTwoDigits = number % 100;
-  
-  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
-    return forms[2];
-  }
-  
-  if (lastDigit === 1) {
-    return forms[0];
-  }
-  
-  if (lastDigit >= 2 && lastDigit <= 4) {
-    return forms[1];
-  }
-  
+
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) return forms[2];
+  if (lastDigit === 1) return forms[0];
+  if (lastDigit >= 2 && lastDigit <= 4) return forms[1];
   return forms[2];
 };
 
 const statsData = computed(() => [
   {
-    icon: '💰',
-    title: 'Сэкономлено:',
+    title: 'Сэкономлено',
     value: `${userStore.moneySaved} EUR`
   },
   {
-    icon: '🚭',
-    title: 'Не выкурено:',
+    title: 'Не выкурено',
     value: `${userStore.cigarettesNotSmoked} ${getWordForm(userStore.cigarettesNotSmoked, cigaretteForms)}`
   },
   {
-    icon: '🏆',
-    title: 'Достижения:',
+    title: 'Достижения',
     value: `${achievementsStore.unlockedCount} / ${achievementsStore.achievements.length}`
   }
 ]);
@@ -335,17 +172,16 @@ const sortedHealthImprovements = computed(() => {
   return [...healthImprovements].sort((a, b) => {
     const aActive = isActive(a.time);
     const bActive = isActive(b.time);
-    
     if (aActive && !bActive) return -1;
     if (!aActive && bActive) return 1;
     return 0;
   });
 });
 
-const displayedHealthImprovements = computed(() => {
-  return showAllHealth.value 
-    ? sortedHealthImprovements.value 
-    : sortedHealthImprovements.value.slice(0, 3);
+const filteredHealthItems = computed(() => {
+  return showAllHealth.value
+    ? sortedHealthImprovements.value
+    : sortedHealthImprovements.value.slice(0, 5);
 });
 
 const facts = [
@@ -385,23 +221,17 @@ const encouragements = computed(() => {
 const faqItems = [
   {
     question: 'Как справиться с тягой к курению?',
-    answer: 'Тяга к курению обычно длится всего 3-5 минут. Попробуйте сделать глубокий вдох, выпить стакан воды, прогуляться или заняться чем-то, что отвлечет вас. Используйте функцию достижений в Clean Day как дополнительную мотивацию - каждый раз, когда вы преодолеваете желание закурить, вы становитесь на шаг ближе к новому достижению.'
+    answer: 'Тяга обычно длится 3-5 минут. Глубокий вдох, стакан воды или короткая прогулка помогут переждать. Каждый раз, когда вы преодолеваете желание закурить, вы становитесь ближе к новому достижению.'
   },
   {
-    question: 'Как долго продлятся симптомы отказа от курения?',
-    answer: 'Симптомы отказа от курения обычно наиболее интенсивны в первую неделю и могут включать раздражительность, беспокойство, проблемы с концентрацией и повышенный аппетит. В большинстве случаев эти симптомы значительно уменьшаются через 2-4 недели. Приложение Clean Day поможет вам отслеживать прогресс и увидеть, как каждый день без сигарет улучшает ваше здоровье.'
+    question: 'Как долго продлятся симптомы отказа?',
+    answer: 'Наиболее интенсивные симптомы проходят за первую неделю. Раздражительность, беспокойство и повышенный аппетит значительно уменьшаются через 2-4 недели.'
   },
   {
     question: 'Повысится ли моя популярность среди друзей в школе?',
-    answer: 'При использовании Clean Day спина становится шире, причёска - гуще, зубы - белее, бицепсы - больше. Вы гарантировано получите внимание женщин, уважение друзей и зависть недоброжелателей.'
+    answer: 'При использовании Clean Day спина становится шире, причёска — гуще, зубы — белее, бицепсы — больше. Вы гарантировано получите внимание женщин, уважение друзей и зависть недоброжелателей.'
   }
 ];
-
-const openFaqs = ref(faqItems.map(() => false));
-
-const toggleFaq = (index) => {
-  openFaqs.value[index] = !openFaqs.value[index];
-};
 
 const getRandomMessage = () => {
   if (userStore.hasUserName) {
@@ -411,7 +241,6 @@ const getRandomMessage = () => {
       const randomIndex = Math.floor(Math.random() * possibleMessages.length);
       randomMessage = possibleMessages[randomIndex];
     } while (possibleMessages.length > 1 && randomMessage === currentMessage.value);
-    
     currentMessage.value = randomMessage;
   } else {
     const randomIndex = Math.floor(Math.random() * facts.length);
@@ -445,13 +274,12 @@ const isActive = (timeStr) => {
 };
 
 const simulateLoading = async () => {
-  await new Promise(resolve => setTimeout(resolve, 250)); 
+  await new Promise(resolve => setTimeout(resolve, 250));
   isLoading.value = false;
 };
 
 onMounted(async () => {
   simulateLoading();
-  
   getRandomMessage();
   achievementsStore.initialize();
   achievementsStore.checkAchievements();
@@ -460,24 +288,13 @@ onMounted(async () => {
 
 <style scoped>
 .skeleton {
-  background: linear-gradient(90deg, 
-    #f0f0f0 25%, 
-    #e0e0e0 50%, 
-    #f0f0f0 75%
+  background: linear-gradient(90deg,
+    #161b22 25%,
+    #21262d 50%,
+    #161b22 75%
   );
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s infinite;
-}
-
-@media (prefers-color-scheme: dark) {
-  .skeleton {
-    background: linear-gradient(90deg, 
-      #374151 25%, 
-      #4b5563 50%, 
-      #374151 75%
-    );
-    background-size: 200% 100%;
-  }
 }
 
 @keyframes skeleton-loading {
@@ -497,27 +314,5 @@ onMounted(async () => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-}
-
-.skeleton.rounded {
-  border-radius: 0.375rem;
-}
-
-.skeleton.rounded-full {
-  border-radius: 9999px;
-}
-
-@media (max-width: 768px) {
-  .skeleton[style*="width: 300px"] {
-    max-width: 80% !important;
-  }
-  
-  .skeleton[style*="width: 250px"] {
-    max-width: 70% !important;
-  }
-  
-  .skeleton[style*="width: 200px"] {
-    max-width: 60% !important;
-  }
 }
 </style>

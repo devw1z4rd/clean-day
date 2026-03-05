@@ -1,84 +1,63 @@
 <template>
   <div>
-    <h1 class="text-2xl md:text-3xl font-bold text-center text-gray-900 dark:text-gray-100 mb-8">
-      Ваши достижения
-    </h1>
-    
-    <UCard class="mb-8" :ui="{ ring: '', divide: '', body: { base: 'p-6' } }">
-      <UProgress
-        :value="achievementsStore.achievementProgress"
-        color="primary"
-        size="lg"
-        class="mb-3"
-      />
-      <div class="text-center text-gray-700 dark:text-gray-300">
-        Открыто <span class="font-semibold">{{ achievementsStore.unlockedCount }}</span> 
-        из <span class="font-semibold">{{ achievementsStore.achievements.length }}</span> достижений
-        (<span class="font-semibold">{{ achievementsStore.achievementProgress }}%</span>)
-      </div>
-    </UCard>
-    
-    <div v-if="userStore.hasQuit">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        <UCard
-          v-for="achievement in achievementsStore.achievements" 
-          :key="achievement.id" 
-          class="relative transition-all duration-300 hover:-translate-y-1 overflow-hidden"
-          :class="achievement.unlocked ? 'border-t-4 border-t-green-500' : 'border-t-4 border-t-gray-300 dark:border-t-gray-600 opacity-80'"
-          :ui="{ ring: '', body: { base: 'p-5' } }"
-        >
-          <div class="absolute top-3 right-3">
-            <UBadge 
-              :color="achievement.unlocked ? 'green' : 'gray'" 
-              :variant="achievement.unlocked ? 'solid' : 'soft'"
-              class="text-xs uppercase tracking-wider"
-            >
-              {{ achievement.unlocked ? 'Получено' : 'Заблокировано' }}
-            </UBadge>
-          </div>
-          
-          <div class="flex flex-col items-center mb-4">
-            <div class="h-16 w-16 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-3xl mb-4">
-              {{ getEmojiForIcon(achievement.icon) }}
-            </div>
-            <h3 class="text-lg font-semibold mb-2 text-center" :class="achievement.unlocked ? 'text-primary-600 dark:text-primary-400' : 'text-gray-600 dark:text-gray-400'">
-              {{ achievement.title }}
-            </h3>
-          </div>
-          
-          <p v-if="achievement.unlocked" class="text-gray-700 dark:text-gray-300 text-center">
-            {{ achievement.description }}
-          </p>
-          <p v-else class="text-gray-500 dark:text-gray-400 text-center italic">
-            {{ getAchievementHint(achievement) }}
-          </p>
-        </UCard>
+    <div class="px-1 mb-8">
+      <h1 class="text-2xl md:text-3xl font-bold text-white mb-6">
+        Достижения
+      </h1>
+
+      <div class="mb-6">
+        <div class="bg-white/5 rounded-full h-1.5 overflow-hidden">
+          <div class="h-full bg-green-500 rounded-full transition-all duration-500 ease-out"
+            :style="`width: ${achievementsStore.achievementProgress}%`"></div>
+        </div>
+        <div class="flex justify-between items-center mt-2">
+          <span class="text-[11px] text-gray-600">{{ achievementsStore.achievementProgress }}%</span>
+          <span class="text-[11px] text-gray-700">{{ achievementsStore.unlockedCount }} / {{ achievementsStore.achievements.length }}</span>
+        </div>
       </div>
     </div>
-    
-    <div v-else>
-      <UCard :ui="{ ring: '', header: { padding: 'p-6' }, body: { base: 'px-6 py-10' }, footer: { padding: 'p-6' } }">
-        <template #header>
-          <h2 class="text-xl font-semibold text-center">Начните свой путь к здоровью</h2>
-        </template>
-        
-        <p class="text-center text-lg text-gray-700 dark:text-gray-300 mb-6">
-          Укажите дату отказа от курения на главной странице, чтобы начать получать достижения.
-        </p>
-        
-        <template #footer>
-          <div class="flex justify-center">
-            <UButton
-              to="/"
-              color="primary"
-              size="lg"
-              class="rounded-full px-6"
-            >
-              Перейти на главную
-            </UButton>
+
+    <div v-if="userStore.hasQuit">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-1">
+        <div
+          v-for="achievement in achievementsStore.achievements"
+          :key="achievement.id"
+          class="rounded-xl border p-5 transition-all duration-200"
+          :class="achievement.unlocked
+            ? 'border-green-500/20 bg-green-500/[0.03]'
+            : 'border-white/5 bg-white/[0.02] opacity-60'"
+        >
+          <div class="flex items-start justify-between mb-3">
+            <div class="text-2xl">
+              {{ getEmojiForIcon(achievement.icon) }}
+            </div>
+            <span class="text-[10px] uppercase tracking-widest"
+              :class="achievement.unlocked ? 'text-green-500' : 'text-gray-700'">
+              {{ achievement.unlocked ? 'Получено' : 'Закрыто' }}
+            </span>
           </div>
-        </template>
-      </UCard>
+
+          <h3 class="text-sm font-medium mb-1"
+            :class="achievement.unlocked ? 'text-white' : 'text-gray-500'">
+            {{ achievement.title }}
+          </h3>
+
+          <p class="text-xs leading-relaxed"
+            :class="achievement.unlocked ? 'text-gray-400' : 'text-gray-700'">
+            {{ achievement.unlocked ? achievement.description : getAchievementHint(achievement) }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div v-else class="rounded-xl border border-white/5 bg-[#111] py-10 px-6 text-center mx-1">
+      <p class="text-gray-500 mb-6 text-sm">
+        Укажите дату отказа от курения на главной странице, чтобы начать получать достижения.
+      </p>
+      <NuxtLink to="/"
+        class="inline-block bg-green-600 text-white font-medium text-sm py-3 px-8 rounded-full transition active:scale-95 hover:bg-green-500">
+        Перейти на главную
+      </NuxtLink>
     </div>
   </div>
 </template>
@@ -97,19 +76,10 @@ const cigaretteForms = ['сигарету', 'сигареты', 'сигарет'
 const getWordForm = (number, forms) => {
   const lastDigit = number % 10;
   const lastTwoDigits = number % 100;
-  
-  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
-    return forms[2];
-  }
-  
-  if (lastDigit === 1) {
-    return forms[0];
-  }
-  
-  if (lastDigit >= 2 && lastDigit <= 4) {
-    return forms[1];
-  }
-  
+
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 14) return forms[2];
+  if (lastDigit === 1) return forms[0];
+  if (lastDigit >= 2 && lastDigit <= 4) return forms[1];
   return forms[2];
 };
 
@@ -130,7 +100,7 @@ const getEmojiForIcon = (iconName) => {
     'mdi-lungs': '🫁',
     'mdi-heart-pulse': '💓',
   };
-  
+
   return iconMap[iconName] || '🏆';
 };
 
@@ -138,15 +108,12 @@ const getAchievementHint = (achievement) => {
   if (achievement.requiredDays) {
     return `Не курите ${achievement.requiredDays} ${getWordForm(achievement.requiredDays, dayForms)}`;
   }
-  
   if (achievement.requiredMoney) {
     return `Сэкономьте ${achievement.requiredMoney} EUR`;
   }
-  
   if (achievement.requiredCigarettes) {
     return `Не выкурите ${achievement.requiredCigarettes} ${getWordForm(achievement.requiredCigarettes, cigaretteForms)}`;
   }
-  
   return 'Продолжайте не курить';
 };
 

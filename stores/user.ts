@@ -28,7 +28,7 @@ export const useUserStore = defineStore('user', {
     cigarettesInPack: 20,
     notifications: true,
     achievementNotifications: true,
-    theme: 'system' as string, 
+    theme: 'dark' as string,
     initialized: false,
   }),
 

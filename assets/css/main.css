@@ -10,7 +10,9 @@
   }
   
   body {
-    @apply antialiased text-gray-800 dark:text-gray-200;
+    @apply antialiased;
+    color: #c9d1d9;
+    background-color: #0d1117;
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     font-variation-settings: normal;
