@@ -3,7 +3,7 @@
         <UNotifications />
 
         <nav
-            class="backdrop-blur-2xl text-gray-200 sticky top-0 z-50 border-b shadow-xl transition-all duration-500 ease-in-out"
+            class="backdrop-blur-2xl text-gray-200 sticky top-0 z-50 border-b shadow-xl md:transition-all md:duration-500 md:ease-in-out"
             :class="[
                 scrolled
                     ? 'bg-[#0d1117]/80 border-[#30363d] py-2 px-4 shadow-2xl'
@@ -79,7 +79,12 @@ const isTyping = ref(false);
 const scrolled = ref(false);
 
 const handleScroll = () => {
-    scrolled.value = window.scrollY > 20;
+    scrolled.value = window.innerWidth >= 768 && window.scrollY > 20;
+};
+
+const handleResize = () => {
+    if (window.innerWidth < 768) scrolled.value = false;
+    updateMobileMenuPosition();
 };
 
 const updateMobileMenuPosition = () => {
@@ -181,12 +186,12 @@ onMounted(() => {
     
     window.addEventListener('scroll', handleScroll, { passive: true });
     
-    window.addEventListener('resize', updateMobileMenuPosition, { passive: true });
+    window.addEventListener('resize', handleResize, { passive: true });
 });
 
 onUnmounted(() => {
     window.removeEventListener('scroll', handleScroll);
-    window.removeEventListener('resize', updateMobileMenuPosition);
+    window.removeEventListener('resize', handleResize);
 });
 </script>
 

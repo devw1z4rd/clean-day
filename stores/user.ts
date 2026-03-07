@@ -29,6 +29,7 @@ export const useUserStore = defineStore('user', {
     notifications: true,
     achievementNotifications: true,
     theme: 'dark' as string,
+    favoriteGif: null as string | null,
     initialized: false,
   }),
 
@@ -119,7 +120,8 @@ export const useUserStore = defineStore('user', {
           cigarettesInPack: this.cigarettesInPack,
           notifications: this.notifications,
           achievementNotifications: this.achievementNotifications,
-          theme: this.theme, 
+          theme: this.theme,
+          favoriteGif: this.favoriteGif,
         };
         localStorage.setItem('clean-day-user', JSON.stringify(stateToSave));
       } catch (error) {
@@ -154,6 +156,11 @@ export const useUserStore = defineStore('user', {
     setUserName(name: string) {
       this.userName = name;
       this.saveState();
-    }
+    },
+
+    setFavoriteGif(gifName: string | null) {
+      this.favoriteGif = gifName;
+      this.saveState();
+    },
   },
 });

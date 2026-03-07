@@ -1,60 +1,88 @@
 <template>
-  <div class="mb-6 md:mb-8">
-    <div v-if="userStore.hasQuit">
-      <!-- Days row -->
-      <div class="flex items-end justify-between mb-6 md:mb-8 px-1">
-        <div>
-          <div class="text-5xl md:text-8xl font-bold text-white tabular-nums leading-none">
-            {{ timeSinceQuit.days }}
+  <div>
+    <div v-if="userStore.hasQuit" class="text-center select-none">
+
+      <!-- Label -->
+      <div class="text-[10px] tracking-[0.5em] text-white/50 uppercase mb-4 shadow-text">
+        без&nbsp;курения
+      </div>
+
+      <!-- Days -->
+      <div class="text-[120px] sm:text-[150px] md:text-[170px] font-black text-white leading-none tabular-nums tracking-tight days-shadow">
+        {{ timeSinceQuit.days }}
+      </div>
+
+      <!-- Word form -->
+      <div class="text-sm tracking-[0.35em] text-white/60 uppercase mt-2 mb-8 shadow-text">
+        {{ getWordForm(timeSinceQuit.days, dayForms) }}
+      </div>
+
+      <!-- Thin separator -->
+      <div class="h-px bg-white/15 mx-auto w-40 mb-7"></div>
+
+      <!-- H · M · S -->
+      <div class="flex items-center justify-center gap-6 sm:gap-10 mb-7">
+        <div class="text-center shadow-text">
+          <div class="text-2xl sm:text-3xl font-light text-white tabular-nums">
+            {{ String(timeSinceQuit.hours).padStart(2, '0') }}
           </div>
-          <div class="text-[11px] md:text-xs text-gray-600 mt-1.5 uppercase tracking-widest">
-            {{ getWordForm(timeSinceQuit.days, dayForms) }}
+          <div class="text-[9px] text-white/40 uppercase tracking-widest mt-1">
+            {{ getWordForm(timeSinceQuit.hours, hourForms) }}
           </div>
         </div>
-        <div class="tabular-nums text-right pb-1">
-          <div class="flex items-baseline gap-3 md:gap-4">
-            <div>
-              <div class="text-2xl md:text-4xl font-semibold text-white leading-none">{{ String(timeSinceQuit.hours).padStart(2, '0') }}</div>
-              <div class="text-[10px] md:text-[11px] text-gray-600 uppercase tracking-widest mt-1">{{ getWordForm(timeSinceQuit.hours, hourForms) }}</div>
-            </div>
-            <div>
-              <div class="text-2xl md:text-4xl font-semibold text-white leading-none">{{ String(timeSinceQuit.minutes).padStart(2, '0') }}</div>
-              <div class="text-[10px] md:text-[11px] text-gray-600 uppercase tracking-widest mt-1">{{ getWordForm(timeSinceQuit.minutes, minuteForms) }}</div>
-            </div>
-            <div>
-              <div class="text-2xl md:text-4xl font-semibold text-gray-500 leading-none">{{ String(timeSinceQuit.seconds).padStart(2, '0') }}</div>
-              <div class="text-[10px] md:text-[11px] text-gray-700 uppercase tracking-widest mt-1">{{ getWordForm(timeSinceQuit.seconds, secondForms) }}</div>
-            </div>
+        <div class="text-white/25 text-xl mb-5">·</div>
+        <div class="text-center shadow-text">
+          <div class="text-2xl sm:text-3xl font-light text-white tabular-nums">
+            {{ String(timeSinceQuit.minutes).padStart(2, '0') }}
+          </div>
+          <div class="text-[9px] text-white/40 uppercase tracking-widest mt-1">
+            {{ getWordForm(timeSinceQuit.minutes, minuteForms) }}
+          </div>
+        </div>
+        <div class="text-white/25 text-xl mb-5">·</div>
+        <div class="text-center shadow-text">
+          <div class="text-2xl sm:text-3xl font-light text-white/45 tabular-nums">
+            {{ String(timeSinceQuit.seconds).padStart(2, '0') }}
+          </div>
+          <div class="text-[9px] text-white/25 uppercase tracking-widest mt-1">
+            {{ getWordForm(timeSinceQuit.seconds, secondForms) }}
           </div>
         </div>
       </div>
 
       <!-- Progress -->
-      <div class="px-1">
-        <div class="bg-white/5 rounded-full h-1 overflow-hidden">
-          <div class="h-full bg-green-500 rounded-full transition-all duration-500 ease-out"
-            :style="`width: ${calculateProgressPercentage()}%`"></div>
+      <div class="max-w-[180px] mx-auto shadow-text">
+        <div class="bg-white/[0.12] rounded-full h-px overflow-hidden">
+          <div
+            class="h-full bg-green-400 rounded-full transition-all duration-500 ease-out"
+            :style="`width: ${progressPercent}%`"
+          ></div>
         </div>
-        <div class="flex justify-between items-center mt-2">
-          <span class="text-[11px] text-gray-600">{{ calculateProgressPercentage() }}% цели</span>
-          <span class="text-[11px] text-gray-700">{{ timeSinceQuit.days }} / 21</span>
+        <div class="flex justify-between mt-2">
+          <span class="text-[10px] text-white/30">{{ progressPercent }}% цели</span>
+          <span class="text-[10px] text-white/20">{{ timeSinceQuit.days }} / 21</span>
         </div>
       </div>
 
-      <div v-if="showResetButton" class="mt-4 px-1">
+      <!-- Reset -->
+      <div v-if="showResetButton" class="mt-6">
         <button @click="showResetConfirm = true"
-          class="text-xs text-gray-700 hover:text-gray-400 transition-colors">
+          class="text-xs text-white/20 hover:text-white/50 transition-colors shadow-text">
           Сбросить прогресс
         </button>
       </div>
     </div>
 
-    <div v-else class="rounded-xl border border-white/5 bg-[#111] py-10 md:py-14 px-6 text-center">
-      <p class="text-gray-500 mb-6 text-sm md:text-base">
-        Начните свой путь к здоровому образу жизни
+    <!-- Not started -->
+    <div v-else class="text-center select-none">
+      <div class="text-[10px] tracking-[0.5em] text-white/40 uppercase mb-8 shadow-text">
+        clean&nbsp;day
+      </div>
+      <p class="text-white/70 mb-10 text-base sm:text-lg leading-relaxed shadow-text">
+        Начните свой путь<br>к здоровому образу жизни
       </p>
       <button @click="startQuit"
-        class="bg-green-600 text-white font-medium text-sm md:text-base py-3 px-8 rounded-full transition active:scale-95 hover:bg-green-500">
+        class="bg-green-600 text-white font-medium text-sm py-3 px-10 rounded-full transition active:scale-95 hover:bg-green-500 shadow-lg">
         Бросить курить
       </button>
     </div>
@@ -68,18 +96,12 @@
           <h3 class="text-lg font-semibold">Сбросить прогресс?</h3>
         </div>
       </template>
-
       <p class="text-gray-400 mb-4">
         Вы уверены, что хотите сбросить весь прогресс? Все ваши достижения и статистика будут сохранены, но счетчик времени будет сброшен.
       </p>
-
       <div class="flex justify-end gap-2">
-        <UButton color="gray" @click="showResetConfirm = false">
-          Отмена
-        </UButton>
-        <UButton color="red" @click="resetProgress">
-          Сбросить
-        </UButton>
+        <UButton color="gray" @click="showResetConfirm = false">Отмена</UButton>
+        <UButton color="red" @click="resetProgress">Сбросить</UButton>
       </div>
     </UCard>
   </UModal>
@@ -107,10 +129,13 @@ const showResetButton = computed(() => {
   return totalHours >= 2;
 });
 
+const progressPercent = computed(() => {
+  return Math.min(Math.round((timeSinceQuit.value.days / 21) * 100), 100);
+});
+
 const getWordForm = (number, forms) => {
   const lastDigit = number % 10;
   const lastTwoDigits = number % 100;
-
   if (lastTwoDigits >= 11 && lastTwoDigits <= 14) return forms[2];
   if (lastDigit === 1) return forms[0];
   if (lastDigit >= 2 && lastDigit <= 4) return forms[1];
@@ -122,18 +147,12 @@ const calculateTimeDifference = () => {
   const quitDate = new Date(userStore.quitDate);
   const now = new Date();
   const diffMs = now - quitDate;
-
   timeSinceQuit.value = {
     days: Math.floor(diffMs / (1000 * 60 * 60 * 24)),
     hours: Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
     minutes: Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60)),
-    seconds: Math.floor((diffMs % (1000 * 60)) / 1000)
+    seconds: Math.floor((diffMs % (1000 * 60)) / 1000),
   };
-};
-
-const calculateProgressPercentage = () => {
-  const goalDays = 21;
-  return Math.min(Math.round((timeSinceQuit.value.days / goalDays) * 100), 100);
 };
 
 let timer = null;
@@ -164,5 +183,16 @@ const resetProgress = () => {
 <style scoped>
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+.days-shadow {
+  text-shadow:
+    0 4px 40px rgba(0, 0, 0, 0.9),
+    0 2px 12px rgba(0, 0, 0, 0.7),
+    0 0 80px rgba(0, 0, 0, 0.4);
+}
+
+.shadow-text {
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9), 0 1px 4px rgba(0, 0, 0, 0.7);
 }
 </style>
