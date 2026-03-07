@@ -416,20 +416,23 @@ import { useUserStore } from '~/stores/user';
 import { useAchievementsStore } from '~/stores/achievements';
 import { useSyncStore } from '~/stores/sync';
 
+const { app: { baseURL } } = useRuntimeConfig();
+const bgSrc = (name: string) => `${baseURL}bg/${name}`;
+
 const availableGifs = [
-  { name: 'timer.gif', src: '/bg/timer.gif', label: 'Оригинал' },
-  { name: 'elon.gif', src: '/bg/elon.gif', label: 'Маск' },
-  { name: 'timer1.gif', src: '/bg/timer1.gif', label: 'Таймер' },
-  { name: 'mads.gif', src: '/bg/mads.gif', label: 'Мадс' },
-  { name: 'cigarrillo.gif', src: '/bg/cigarrillo.gif', label: 'Классик' },
-  { name: 'sad.gif', src: '/bg/sad.gif', label: 'Грусть' },
-  { name: 'marlboro.gif', src: '/bg/marlboro.gif', label: 'Пачка Marlboro' },
-  { name: 'morning.gif', src: '/bg/morning.gif', label: 'Утро' },
-  { name: 'no.gif', src: '/bg/no.gif', label: 'Нет курению' },
-  { name: 'nono.gif', src: '/bg/nono.gif', label: 'Нет курению' },
-  { name: 'nonono.gif', src: '/bg/nonono.gif', label: 'Нет курению' },
-  { name: 'superman.gif', src: '/bg/superman.gif', label: 'Супермен' },
-  { name: 'smoking.gif', src: '/bg/smoking.gif', label: 'Jack' },
+  { name: 'timer.gif', src: bgSrc('timer.gif'), label: 'Оригинал' },
+  { name: 'elon.gif', src: bgSrc('elon.gif'), label: 'Маск' },
+  { name: 'timer1.gif', src: bgSrc('timer1.gif'), label: 'Таймер' },
+  { name: 'mads.gif', src: bgSrc('mads.gif'), label: 'Мадс' },
+  { name: 'cigarrillo.gif', src: bgSrc('cigarrillo.gif'), label: 'Классик' },
+  { name: 'sad.gif', src: bgSrc('sad.gif'), label: 'Грусть' },
+  { name: 'marlboro.gif', src: bgSrc('marlboro.gif'), label: 'Пачка Marlboro' },
+  { name: 'morning.gif', src: bgSrc('morning.gif'), label: 'Утро' },
+  { name: 'no.gif', src: bgSrc('no.gif'), label: 'Нет курению' },
+  { name: 'nono.gif', src: bgSrc('nono.gif'), label: 'Нет курению' },
+  { name: 'nonono.gif', src: bgSrc('nonono.gif'), label: 'Нет курению' },
+  { name: 'superman.gif', src: bgSrc('superman.gif'), label: 'Супермен' },
+  { name: 'smoking.gif', src: bgSrc('smoking.gif'), label: 'Jack' },
 ];
 
 const toast = useToast();

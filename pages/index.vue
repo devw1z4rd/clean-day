@@ -119,7 +119,8 @@ const gifNames = [
   'nonono.gif',
   'smoking.gif',
 ];
-const gifSrc = (name) => `/bg/${name}`;
+const { app: { baseURL } } = useRuntimeConfig();
+const gifSrc = (name) => `${baseURL}bg/${name}`;
 
 const userStore = useUserStore();
 const achievementsStore = useAchievementsStore();
